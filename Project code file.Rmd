@@ -1,0 +1,336 @@
+
+---
+title: "PROJECT 01: Spatial Distribution of Fire Incidents in D.C., Maryland, and Virginia in 2018"
+author: |
+  Jeongwon Yoo  
+  Simbanegavi Simbarashe  
+  Nithin Ravindra Reddy  
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: show
+    number_sections: false
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+---
+
+```{r setup, include=FALSE}
+# Set CRAN mirror
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+
+# Install required packages if they are not already installed
+required_packages <- c("sf", "ggplot2", "viridis", "dplyr", "lubridate")
+new_packages <- required_packages[!(required_packages %in% installed.packages()[, "Package"])]
+if (length(new_packages)) {
+  install.packages(new_packages)
+}
+
+# Load libraries
+library(sf)
+library(ggplot2)
+library(viridis)
+library(dplyr)
+library(lubridate)
+```
+```{r}
+# Common R Markdown options
+knitr::opts_chunk$set(results="markup", warning = F, message = F)
+
+# Set options for number display format
+options(scientific=T, digits = 3)
+```
+#  CHAPTER 1: Introduction
+## 1.0 Overview
+
+The spatial pattern of fire incidents is a critical area of study, particularly in urban environments where population density and infrastructure can significantly influence fire dynamics. This research project focuses on the spatial distribution of fire incidents in Washington, D.C., Maryland, and Virginia, examining how geographic and environmental factors contribute to the occurrence and frequency of fires.
+
+## 1.1 Objectives
+
+Analyze the spatial distribution of fire incidents across Washington, D.C., Maryland, and Virginia, identifying geographic hotspots and patterns in urban versus rural areas.
+Investigate the role of environmental factors, such as weather conditions and vegetation, in influencing the incidence of fires in the studied regions during 2018.
+Categorize types of fire incidents (e.g., residential, commercial, vehicle) and assess their causes, comparing urban and rural settings to identify specific risk factors.
+
+## 1.2 Research Questions
+
+What geographic patterns can be identified in the distribution of fire incidents across Washington, D.C., Maryland, and Virginia in 2018?
+
+How do environmental factors influence the incidence of fires in the studied regions during 2018?
+
+What types of fire incidents were most prevalent, and what are the specific causes associated with these incidents in both urban and rural settings?
+
+## 1.3 Significance of the Study
+This project study enhances understanding of fire incident dynamics in Washington, D.C., Maryland, and Virginia. Findings can inform policymakers and emergency services about high-risk areas and the underlying causes of fires, facilitating targeted prevention strategies and improving public safety initiatives.
+
+#  CHAPTER 2: Methodology
+## 2.0 Dataset 
+This project utilized the US Wildfire Dataset from Kaggle, comprising approximately 1.9 million observations of wildfire incidents across the United States. For this analysis, approximately 17,000 fire incidents from D.C., Maryland, and Virginia in 2018 were filtered from the main dataset.
+
+spatial data for project study area (DC,MD AND VA) were downloaded from Diva GIS (https://diva-gis.org/data.html)
+
+## 2.1 Software
+The following software was used for this project:
+
+R and R Markdown
+GitHub (GitHub Repository)
+Microsoft Excel
+
+## 2.2 Project Study Area
+
+```{r load_and_display_study_area}
+# Specify the path to your study area shapefile
+shapefile_path <- "C:/Users/SIMBAH/Desktop/Intro to Data science/Project/DC_MD_VA Boundaries/Project_Area.shp"
+
+# Load the shapefile
+Study_Area <- st_read(shapefile_path)
+
+# Check the CRS
+print(st_crs(Study_Area))
+
+# Transform to NAD83 / UTM Zone 18N (EPSG:26918)
+Study_Area <- st_transform(Study_Area, crs = 26918)
+
+# View the structure of the shapefile data
+#str(Study_Area)
+
+# Plot the data with labels
+library(ggplot2)
+library(viridis)
+
+ggplot(data = Study_Area) +
+  geom_sf(aes(fill = NAME_1), color = "Green") +  # Fill by NAME_1 and add a border
+  geom_sf_text(aes(label = NAME_1), size = 3, check_overlap = TRUE, color = "black", fontface = "bold") +  # Add labels in bold black
+  scale_fill_viridis_d(option = "C", name = "Key") +  # Update legend title to "Key"
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5),  # Center the title
+    legend.position = "right"  # Position the legend on the right
+  ) +
+  ggtitle("Project Study Area Map")
+```
+# CHAPTER 3: Analysis and Results
+
+## 3.1 EXPLORATORY DATA ANALYSIS
+
+```{r load_fire_data, echo=TRUE}
+# Load necessary libraries
+library(dplyr)
+
+# Load the fire incidence CSV file
+fire_data_path <- "C:/Users/SIMBAH/Desktop/Intro to Data science/Project/Fire incidences DC_VA_MD_cleaned.csv" # Update with your actual path
+fire_data <- read.csv(fire_data_path)
+
+# Examine the structure of the data
+str(fire_data)
+```
+## 3.1.2 Summary Statistics
+
+```{r summary_statistics, echo=TRUE}
+# Summary statistics
+summary(fire_data)
+
+# Check for missing values
+missing_values <- colSums(is.na(fire_data))
+print(missing_values)
+```
+## 3.1.3 Distribution of Fire Incidences
+
+```{r total_fire_incidents_by_state_filtered, echo=TRUE, fig.width=8, fig.height=4}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+
+# Summarize total fire incidents by state (counting rows)
+fire_data_summary <- fire_data %>%
+  group_by(STATE) %>%
+  summarise(total_fire_count = n()) %>%
+  filter(total_fire_count > 1)  # Exclude states with 1 incident or less
+
+# Check the summarized data to verify filtering
+print(fire_data_summary)
+
+# Create a bar graph for total incidents by state
+ggplot(fire_data_summary, aes(x = STATE, y = total_fire_count, fill = STATE)) +
+  geom_bar(stat = "identity", color = "black") +
+  geom_text(aes(label = total_fire_count), vjust = -0.5) +  # Add labels above bars
+  theme_minimal() +
+  ggtitle("Total Fire Incidences by State in 2018") +
+  xlab("STATE") +
+  ylab("Total Number of Fire Incidents") +
+  scale_fill_manual(values = c("VA" = "lightblue", "MD" = "lightcoral")) +  # Only include states with incidents
+  theme(legend.title = element_blank())
+```
+## 3.1.4 Heatmap of incidences by month and state
+```{r}
+# Load necessary libraries
+library(dplyr)
+library(ggplot2)
+
+# Load the fire incidence CSV file
+fire_data_path <- "C:/Users/SIMBAH/Desktop/Intro to Data science/Project/Fire incidences DC_VA_MD_cleaned.csv"  # Update with your actual path
+fire_data <- read.csv(fire_data_path)
+
+# Examine the structure of the data
+#str(fire_data)
+
+# Convert Month to a factor with the correct order
+fire_data$Month <- factor(fire_data$Month, levels = c(
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+))
+
+# Create a summary of total incidents by month and state
+heatmap_data <- fire_data %>%
+  group_by(Month, STATE) %>%
+  summarise(total_incidents = n(), .groups = 'drop')  # Count incidents
+
+# Create the heatmap
+ggplot(heatmap_data, aes(x = Month, y = STATE, fill = total_incidents)) +
+  geom_tile(color = "white") +  # Add tiles
+  scale_fill_gradient(low = "white", high = "blue") +  # Color gradient
+  theme_minimal() +
+  ggtitle("Heatmap of Fire Incidents by Month and State in 2018") +
+  xlab("Month") +
+  ylab("State") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels
+```
+## 3.1.5 Fire Incidents by Cause
+```{r}
+# Load necessary libraries
+library(dplyr)
+library(ggplot2)
+
+# Load the fire incidence CSV file
+#fire_data_path <- "C:/Users/SIMBAH/Desktop/Intro to Data science/Project/Fire incidences DC_VA_MD_cleaned.csv"  # Update with your actual path
+#fire_data <- read.csv(fire_data_path)
+
+# Examine the structure of the data
+#str(fire_data)
+
+# Convert Month to a factor with the correct order
+fire_data$Month <- factor(fire_data$Month, levels = c(
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+))
+
+# Ensure that the Year column is present. If not, you can create it from a date column.
+# For example, if you have a column called 'Date':
+# fire_data$FIRE_YEAR <- format(as.Date(fire_data$Date), "%Y")
+
+# Create a summary of total incidents by year, month, and cause
+cause_summary <- fire_data %>%
+  group_by(FIRE_YEAR, Month, NWCG_GENERAL_CAUSE) %>%
+  summarise(total_incidents = n(), .groups = 'drop')  # Count incidents
+
+# Visualize the data using a line plot
+ggplot(cause_summary, aes(x = interaction(FIRE_YEAR, Month), y = total_incidents, color = NWCG_GENERAL_CAUSE)) +
+  geom_line() +  # Line plot for trends
+  geom_point() +  # Add points for clarity
+  scale_x_discrete(labels = function(x) gsub("\\s+", " ", x)) +  # Clean up x-axis labels
+  theme_minimal() +
+  ggtitle("Fire Incidents by Cause DC,MV, VA 2008") +
+  xlab("Month") +
+  ylab("Total Incidents") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels
+```
+## 3.1.6 Fire cause classification
+```{r}
+cause_summary <- fire_data %>%
+  group_by(NWCG_GENERAL_CAUSE) %>%
+  summarise(total_incidents = n())
+
+ggplot(cause_summary, aes(x = reorder(NWCG_GENERAL_CAUSE, total_incidents), y = total_incidents, fill = NWCG_GENERAL_CAUSE)) +
+  geom_bar(stat = "identity", color = "black") +
+  coord_flip() +
+  theme_minimal() +
+  ggtitle("Fire Incidents by Cause") +
+  xlab("Cause") +
+  ylab("Total Number of Fire Incidents")
+```
+## 3.1.7 Fire incidence by cause and  state
+```{r}
+# Load necessary libraries
+library(dplyr)
+library(ggplot2)
+
+# Load the fire incidence CSV file
+#fire_data_path <- "C:/Users/SIMBAH/Desktop/Intro to Data science/Project/Fire incidences DC_VA_MD_cleaned.csv"  # Update with your actual path
+#fire_data <- read.csv(fire_data_path)
+
+# Examine the structure of the data
+#str(fire_data)
+
+# Create a summary of total incidents by cause and state
+cause_summary <- fire_data %>%
+  group_by(STATE, NWCG_GENERAL_CAUSE) %>%
+  summarise(total_incidents = n(), .groups = 'drop')  # Count incidents
+
+# Visualize the data using a bar plot
+ggplot(cause_summary, aes(x = reorder(NWCG_GENERAL_CAUSE, total_incidents), y = total_incidents, fill = STATE)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black") +  # Use position = "dodge" to separate bars by state
+  coord_flip() +
+  theme_minimal() +
+  ggtitle("Fire Incidents by Cause and State") +
+  xlab("Cause") +
+  ylab("Total Number of Fire Incidents") +
+  scale_fill_brewer(palette = "Set1")  # Optional: Use a color palette for better distinction
+```
+## 3.1.8 Fire Incidences by Ownership
+```{r}
+ownership_summary <- fire_data %>%
+  group_by(OWNER_DESCR) %>%
+  summarise(total_incidents = n())
+
+ggplot(ownership_summary, aes(x = "", y = total_incidents, fill = OWNER_DESCR)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y") +
+  theme_minimal() +
+  ggtitle("Proportion of Fire Incidents by Ownership") +
+  ylab("")
+```
+## 3.1.9 Geographic Distribution of Fire Incidences by caue
+
+```{r}
+# Load necessary libraries
+library(sf)
+library(ggplot2)
+library(dplyr)
+
+# Load the fire incidence CSV file
+fire_data_path <- "C:/Users/SIMBAH/Desktop/Intro to Data science/Project/Fire incidences DC_VA_MD_cleaned.csv"  # Update with your actual path
+fire_data <- read.csv(fire_data_path)
+
+# Check for missing values in LONGITUDE and LATITUDE
+missing_coords <- fire_data %>%
+  filter(is.na(LONGITUDE) | is.na(LATITUDE))
+
+# Print missing coordinates
+if (nrow(missing_coords) > 0) {
+  print("Rows with missing coordinates:")
+  print(missing_coords)
+}
+
+# Remove rows with missing coordinates
+fire_data_clean <- fire_data %>%
+  filter(!is.na(LONGITUDE) & !is.na(LATITUDE))
+
+# Load the shapefile
+shapefile_path <- "C:/Users/SIMBAH/Desktop/Intro to Data science/Project/DC_MD_VA Boundaries/Project_Area.shp"  # Update this path to your shapefile
+states_shapefile <- st_read(shapefile_path)
+
+# Convert fire data to sf object (for plotting)
+fire_data_sf <- st_as_sf(fire_data_clean, coords = c("LONGITUDE", "LATITUDE"), crs = 4326)
+
+# Create a geographic map with shapefile and fire incidents
+ggplot() +
+  geom_sf(data = states_shapefile, fill = NA, color = "black") +  # Plot shapefile
+  geom_sf(data = fire_data_sf, aes(color = NWCG_GENERAL_CAUSE), alpha = 0.6, size = 2) +  # Plot fire incidents
+  scale_color_viridis_d() +  # Optional: Use a color palette for causes
+  theme_minimal() +
+  ggtitle("Geographic Distribution of Fire Incidences by cause") +
+  xlab("Longitude") +
+  ylab("Latitude")
+```
