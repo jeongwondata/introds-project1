@@ -336,7 +336,7 @@ ggplot() +
 
 ```
 
-# CONFIDENCE INTERVALS
+# 3.10 Confidence Intervals
 
 ```{r}
 
@@ -404,7 +404,7 @@ if (nrow(va_incidents) > 0) {
 }
 ```
 
-# ANOVA
+# 3.11 Analysis of Variance (ANOVA)
 
 ```{r}
 
