@@ -1,0 +1,87 @@
+---
+title: "Objective 3"
+output: html_document
+date: "2025-10-09"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#  CHAPTER 1: Introduction
+## 1.0 Overview
+
+The spatial pattern of fire incidents is a critical area of study, particularly in urban environments where population density and infrastructure can significantly influence fire dynamics. This research project focuses on the spatial distribution of fire incidents in Washington, D.C., Maryland, and Virginia, examining how geographic and environmental factors contribute to the occurrence and frequency of fires.
+
+## 1.1 Objectives
+
+Analyze the spatial distribution of fire incidents across Washington, D.C., Maryland, and Virginia, identifying geographic hotspots and patterns in urban versus rural areas.
+Investigate the role of environmental factors, such as weather conditions and vegetation, in influencing the incidence of fires in the studied regions during 2018.
+Categorize types of fire incidents (e.g., residential, commercial, vehicle) and assess their causes, comparing urban and rural settings to identify specific risk factors.
+
+## 1.2 Research Questions
+
+What geographic patterns can be identified in the distribution of fire incidents across Washington, D.C., Maryland, and Virginia in 2018?
+
+How do environmental factors influence the incidence of fires in the studied regions during 2018?
+
+What types of fire incidents were most prevalent, and what are the specific causes associated with these incidents in both urban and rural settings?
+
+## 1.3 Significance of the Study
+This project study enhances understanding of fire incident dynamics in Washington, D.C., Maryland, and Virginia. Findings can inform policymakers and emergency services about high-risk areas and the underlying causes of fires, facilitating targeted prevention strategies and improving public safety initiatives.
+
+#  CHAPTER 2: Methodology
+## 2.0 Dataset 
+This project utilized the US Wildfire Dataset from Kaggle, comprising approximately 1.9 million observations of wildfire incidents across the United States. For this analysis, approximately 17,000 fire incidents from D.C., Maryland, and Virginia in 2018 were filtered from the main dataset.
+
+spatial data for project study area (DC,MD AND VA) were downloaded from Diva GIS (https://diva-gis.org/data.html)
+
+## 2.1 Software
+The following software was used for this project:
+
+R and R Markdown
+GitHub (GitHub Repository)
+Microsoft Excel
+
+## 2.2 Project Study Area
+# Objective 3: Categorize Types of Fire Incidents and Assess Causes
+
+```{r init, include=F}
+library(ezids)
+library(ggplot2)
+```
+
+
+# Read dataset
+```{r}
+fire <- read.csv("Fire incidences DC_VA_MD_cleaned.csv")
+```
+
+
+# Quick overview
+```{r}
+str(fire)
+head(fire)
+```
+
+
+#summary 
+```{r}
+xkablesummary(fire, title = "Fire Statistics Summary")
+```
+
+#1. CATEGORIZATION: Fire Incident Types and Causes
+
+```{r}
+table(fire$NWCG_CAUSE_CLASSIFICATION)
+```
+
+
+# ggplot2 Bar Chart
+```{r}
+ggplot(fire, aes(x = NWCG_CAUSE_CLASSIFICATION)) +
+  geom_bar(col = "black", fill = "white", alpha = 0.7) +
+  labs(title = "Fire Cause Classification",
+       x = "Cause Classification",
+       y = "Number of Incidents")
+```
