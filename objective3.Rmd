@@ -87,3 +87,58 @@ ggplot(fire, aes(x = NWCG_CAUSE_CLASSIFICATION)) +
 ```
 
 just checking
+#Frequency count of causes
+```{r}
+general_cause_counts <- table(fire$NWCG_GENERAL_CAUSE)
+general_cause_counts <- sort(general_cause_counts, decreasing = TRUE)
+general_cause_counts
+```
+
+```{r}
+cause_df <- data.frame(
+  Cause = names(general_cause_counts),
+  Count = as.numeric(general_cause_counts)
+)
+```
+```{r}
+ggplot(data = cause_df, aes(x = reorder(Cause, -Count), y = Count)) + 
+  geom_bar(stat = "identity", col = "black", fill = "green", alpha = .7) + 
+  labs(x = "Reason for the cause", y = "Number of Fire Incidents") +
+  labs(title = "Fire Causes") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+#Segregation based on states
+```{r}
+table(fire$STATE)
+```
+
+#Bar chart on fire incidences in States.
+```{r}
+state_counts <- table(fire$STATE)
+barplot(state_counts,
+        main = "Fire Incidents by State",
+        xlab = "State",
+        ylab = "Number of Incidents",
+        col = "red")
+``` 
+
+#Classification of urban and rural counties in DC,MD and VA.
+```{r}
+urban_counties <- c("Washington, D.C.",
+                    "Montgomery County", "Prince George's County", "Baltimore City",
+                    "Anne Arundel County", "Howard County",
+                    "Fairfax County", "Arlington County", "Virginia Beach City",
+                    "Chesterfield County", "Henrico County", "Loudoun County")
+
+rural_counties <- c("Garrett County", "Allegany County", "Washington County",
+                    "Caroline County", "Somerset County", "Dorchester County",
+                    "Bath County", "Highland County", "Scott County",
+                    "Lee County", "Tazewell County", "Wise County")
+
+# Create new Area Type variable
+fire$AREA_TYPE <- ifelse(fire$FIPS_NAME %in% urban_counties, "Urban",
+                       ifelse(fire$FIPS_NAME %in% rural_counties, "Rural", "Other"))
+
+# View distribution
+table(fire$AREA_TYPE)
+```
