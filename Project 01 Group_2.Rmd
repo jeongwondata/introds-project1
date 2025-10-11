@@ -189,9 +189,6 @@ library(ggplot2)
 fire_data_path <- "C:/Users/SIMBAH/Desktop/Intro to Data science/Project/Fire incidences DC_VA_MD_cleaned.csv"  # Update with your actual path
 fire_data <- read.csv(fire_data_path)
 
-# Examine the structure of the data
-#str(fire_data)
-
 # Convert Month to a factor with the correct order
 fire_data$Month <- factor(fire_data$Month, levels = c(
   "January", "February", "March", "April", "May", "June",
@@ -206,7 +203,7 @@ heatmap_data <- fire_data %>%
 # Create the heatmap
 ggplot(heatmap_data, aes(x = Month, y = STATE, fill = total_incidents)) +
   geom_tile(color = "white") +  # Add tiles
-  scale_fill_gradient(low = "white", high = "blue") +  # Color gradient
+  scale_fill_gradient(low = "white", high = "Red") +  # Color gradient
   theme_minimal() +
   ggtitle("Heatmap of Fire Incidents by Month and State in 2018") +
   xlab("Month") +
@@ -224,9 +221,6 @@ library(ggplot2)
 # Load the fire incidence CSV file
 #fire_data_path <- "C:/Users/SIMBAH/Desktop/Intro to Data science/Project/Fire incidences DC_VA_MD_cleaned.csv"  # Update with your actual path
 #fire_data <- read.csv(fire_data_path)
-
-# Examine the structure of the data
-#str(fire_data)
 
 # Convert Month to a factor with the correct order
 fire_data$Month <- factor(fire_data$Month, levels = c(
@@ -282,9 +276,6 @@ library(ggplot2)
 #fire_data_path <- "C:/Users/SIMBAH/Desktop/Intro to Data science/Project/Fire incidences DC_VA_MD_cleaned.csv"  # Update with your actual path
 #fire_data <- read.csv(fire_data_path)
 
-# Examine the structure of the data
-#str(fire_data)
-
 # Create a summary of total incidents by cause and state
 cause_summary <- fire_data %>%
   group_by(STATE, NWCG_GENERAL_CAUSE) %>%
@@ -316,7 +307,34 @@ ggplot(ownership_summary, aes(x = "", y = total_incidents, fill = OWNER_DESCR)) 
   ylab("")
 ```
 
-## 3.1.9 Geographic Distribution of Fire Incidences by caue
+# 3.1.9 Average fire size by cause
+
+```{r}
+# Load necessary libraries
+library(tidyverse)
+library(ggplot2)
+
+# Load the dataset
+fire_data <- read.csv("C:/Users/SIMBAH/Desktop/Intro to Data science/Project/Fire incidences DC_VA_MD_cleaned.csv")
+
+# Sample code to create a basic map using ggplot2
+# Average fire size by cause
+size_analysis <- fire_data %>%
+  group_by(NWCG_GENERAL_CAUSE) %>%
+  summarise(avg_fire_size = mean(FIRE_SIZE, na.rm = TRUE), 
+            avg_cont_time = mean(CONT_TIME, na.rm = TRUE))
+
+# Plotting
+ggplot(size_analysis, aes(x = reorder(NWCG_GENERAL_CAUSE, -avg_fire_size), y = avg_fire_size)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Average Fire Size by Cause", x = "Cause", y = "Average Fire Size") +
+  theme_minimal()
+```
+
+
+
+## 3.10 Geographic Distribution of Fire Incidences by cause
 
 ```{r}
 # Load necessary libraries
@@ -361,7 +379,7 @@ ggplot() +
 
 ```
 
-# 3.10 Confidence Intervals
+# 3.11 Confidence Intervals
 
 ```{r}
 
@@ -372,16 +390,10 @@ library(dplyr)
 fire_data_path <- "C:/Users/SIMBAH/Desktop/Intro to Data science/Project/Fire incidences DC_VA_MD_cleaned.csv"  # Update with your actual path
 fire_data <- read.csv(fire_data_path)
 
-# Check the structure of the data
-str(fire_data)
-
 # Summarize the data to get counts of incidents by state and cause
 incident_counts <- fire_data %>%
   group_by(STATE, NWCG_GENERAL_CAUSE) %>%
   summarise(Incident_Count = n(), .groups = 'drop')
-
-# Check the summarized data
-print(incident_counts)
 
 # 1. ANOVA: Testing for differences in means across states based on cause
 anova_result <- aov(Incident_Count ~ STATE, data = incident_counts)  # Adjust column names as necessary
@@ -429,7 +441,7 @@ if (nrow(va_incidents) > 0) {
 }
 ```
 
-# 3.11 Analysis of Variance (ANOVA)
+# 3.12 Analysis of Variance (ANOVA)
 
 ```{r}
 
