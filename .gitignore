@@ -1,3 +1,4 @@
 git add .gitignore
 git commit -m "Add R .gitignore"
 git push
+.Rproj.user
