@@ -85,3 +85,5 @@ ggplot(fire, aes(x = NWCG_CAUSE_CLASSIFICATION)) +
        x = "Cause Classification",
        y = "Number of Incidents")
 ```
+
+just checking
