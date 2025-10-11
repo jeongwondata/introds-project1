@@ -36,14 +36,17 @@ library(viridis)
 library(dplyr)
 library(lubridate)
 ```
+
+
 ```{r}
-# Common R Markdown options
-knitr::opts_chunk$set(results="markup", warning = F, message = F)
+# Set global chunk options
+knitr::opts_chunk$set(echo = FALSE, results = "markup", warning = FALSE, message = FALSE)
 
 # Set options for number display format
-options(scientific=T, digits = 3)
+options(scientific = TRUE, digits = 3)
 ```
 #  CHAPTER 1: Introduction
+
 ## 1.0 Overview
 
 The spatial pattern of fire incidents is a critical area of study, particularly in urban environments where population density and infrastructure can significantly influence fire dynamics. This research project focuses on the spatial distribution of fire incidents in Washington, D.C., Maryland, and Virginia, examining how geographic and environmental factors contribute to the occurrence and frequency of fires.
@@ -51,8 +54,10 @@ The spatial pattern of fire incidents is a critical area of study, particularly 
 ## 1.1 Objectives
 
 Analyze the spatial distribution of fire incidents across Washington, D.C., Maryland, and Virginia, identifying geographic hotspots and patterns in urban versus rural areas.
+
 Investigate the role of environmental factors, such as weather conditions and vegetation, in influencing the incidence of fires in the studied regions during 2018.
-Categorize types of fire incidents (e.g., residential, commercial, vehicle) and assess their causes, comparing urban and rural settings to identify specific risk factors.
+
+Categorize types of fire incidents (e.g., residential, commercial, vehicle) and assess their causes, comparing urban and rural settings to identify specific risk factors.**
 
 ## 1.2 Research Questions
 
@@ -63,24 +68,31 @@ How do environmental factors influence the incidence of fires in the studied reg
 What types of fire incidents were most prevalent, and what are the specific causes associated with these incidents in both urban and rural settings?
 
 ## 1.3 Significance of the Study
+
 This project study enhances understanding of fire incident dynamics in Washington, D.C., Maryland, and Virginia. Findings can inform policymakers and emergency services about high-risk areas and the underlying causes of fires, facilitating targeted prevention strategies and improving public safety initiatives.
 
 #  CHAPTER 2: Methodology
-## 2.0 Dataset 
+## 2.0 Dataset
+
 This project utilized the US Wildfire Dataset from Kaggle, comprising approximately 1.9 million observations of wildfire incidents across the United States. For this analysis, approximately 17,000 fire incidents from D.C., Maryland, and Virginia in 2018 were filtered from the main dataset.
 
 spatial data for project study area (DC,MD AND VA) were downloaded from Diva GIS (https://diva-gis.org/data.html)
 
 ## 2.1 Software
+
 The following software was used for this project:
 
 R and R Markdown
+
 GitHub (GitHub Repository)
+
 Microsoft Excel
 
 ## 2.2 Project Study Area
+The study was conducted in 3 states namely DC,VA and MD
 
 ```{r load_and_display_study_area}
+
 # Specify the path to your study area shapefile
 shapefile_path <- "C:/Users/SIMBAH/Desktop/Intro to Data science/Project/DC_MD_VA Boundaries/Project_Area.shp"
 
@@ -126,6 +138,7 @@ fire_data <- read.csv(fire_data_path)
 # Examine the structure of the data
 str(fire_data)
 ```
+
 ## 3.1.2 Summary Statistics
 
 ```{r summary_statistics, echo=TRUE}
@@ -136,6 +149,7 @@ summary(fire_data)
 missing_values <- colSums(is.na(fire_data))
 print(missing_values)
 ```
+
 ## 3.1.3 Distribution of Fire Incidences
 
 ```{r total_fire_incidents_by_state_filtered, echo=TRUE, fig.width=8, fig.height=4}
@@ -163,7 +177,9 @@ ggplot(fire_data_summary, aes(x = STATE, y = total_fire_count, fill = STATE)) +
   scale_fill_manual(values = c("VA" = "lightblue", "MD" = "lightcoral")) +  # Only include states with incidents
   theme(legend.title = element_blank())
 ```
+
 ## 3.1.4 Heatmap of incidences by month and state
+
 ```{r}
 # Load necessary libraries
 library(dplyr)
@@ -172,9 +188,6 @@ library(ggplot2)
 # Load the fire incidence CSV file
 fire_data_path <- "C:/Users/SIMBAH/Desktop/Intro to Data science/Project/Fire incidences DC_VA_MD_cleaned.csv"  # Update with your actual path
 fire_data <- read.csv(fire_data_path)
-
-# Examine the structure of the data
-#str(fire_data)
 
 # Convert Month to a factor with the correct order
 fire_data$Month <- factor(fire_data$Month, levels = c(
@@ -190,14 +203,16 @@ heatmap_data <- fire_data %>%
 # Create the heatmap
 ggplot(heatmap_data, aes(x = Month, y = STATE, fill = total_incidents)) +
   geom_tile(color = "white") +  # Add tiles
-  scale_fill_gradient(low = "white", high = "blue") +  # Color gradient
+  scale_fill_gradient(low = "white", high = "Red") +  # Color gradient
   theme_minimal() +
   ggtitle("Heatmap of Fire Incidents by Month and State in 2018") +
   xlab("Month") +
   ylab("State") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels
 ```
+
 ## 3.1.5 Fire Incidents by Cause
+
 ```{r}
 # Load necessary libraries
 library(dplyr)
@@ -206,9 +221,6 @@ library(ggplot2)
 # Load the fire incidence CSV file
 #fire_data_path <- "C:/Users/SIMBAH/Desktop/Intro to Data science/Project/Fire incidences DC_VA_MD_cleaned.csv"  # Update with your actual path
 #fire_data <- read.csv(fire_data_path)
-
-# Examine the structure of the data
-#str(fire_data)
 
 # Convert Month to a factor with the correct order
 fire_data$Month <- factor(fire_data$Month, levels = c(
@@ -236,7 +248,9 @@ ggplot(cause_summary, aes(x = interaction(FIRE_YEAR, Month), y = total_incidents
   ylab("Total Incidents") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels
 ```
+
 ## 3.1.6 Fire cause classification
+
 ```{r}
 cause_summary <- fire_data %>%
   group_by(NWCG_GENERAL_CAUSE) %>%
@@ -250,7 +264,9 @@ ggplot(cause_summary, aes(x = reorder(NWCG_GENERAL_CAUSE, total_incidents), y = 
   xlab("Cause") +
   ylab("Total Number of Fire Incidents")
 ```
+
 ## 3.1.7 Fire incidence by cause and  state
+
 ```{r}
 # Load necessary libraries
 library(dplyr)
@@ -259,9 +275,6 @@ library(ggplot2)
 # Load the fire incidence CSV file
 #fire_data_path <- "C:/Users/SIMBAH/Desktop/Intro to Data science/Project/Fire incidences DC_VA_MD_cleaned.csv"  # Update with your actual path
 #fire_data <- read.csv(fire_data_path)
-
-# Examine the structure of the data
-#str(fire_data)
 
 # Create a summary of total incidents by cause and state
 cause_summary <- fire_data %>%
@@ -278,7 +291,9 @@ ggplot(cause_summary, aes(x = reorder(NWCG_GENERAL_CAUSE, total_incidents), y = 
   ylab("Total Number of Fire Incidents") +
   scale_fill_brewer(palette = "Set1")  # Optional: Use a color palette for better distinction
 ```
+
 ## 3.1.8 Fire Incidences by Ownership
+
 ```{r}
 ownership_summary <- fire_data %>%
   group_by(OWNER_DESCR) %>%
@@ -291,7 +306,35 @@ ggplot(ownership_summary, aes(x = "", y = total_incidents, fill = OWNER_DESCR)) 
   ggtitle("Proportion of Fire Incidents by Ownership") +
   ylab("")
 ```
-## 3.1.9 Geographic Distribution of Fire Incidences by caue
+
+# 3.1.9 Average fire size by cause
+
+```{r}
+# Load necessary libraries
+library(tidyverse)
+library(ggplot2)
+
+# Load the dataset
+fire_data <- read.csv("C:/Users/SIMBAH/Desktop/Intro to Data science/Project/Fire incidences DC_VA_MD_cleaned.csv")
+
+# Sample code to create a basic map using ggplot2
+# Average fire size by cause
+size_analysis <- fire_data %>%
+  group_by(NWCG_GENERAL_CAUSE) %>%
+  summarise(avg_fire_size = mean(FIRE_SIZE, na.rm = TRUE), 
+            avg_cont_time = mean(CONT_TIME, na.rm = TRUE))
+
+# Plotting
+ggplot(size_analysis, aes(x = reorder(NWCG_GENERAL_CAUSE, -avg_fire_size), y = avg_fire_size)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Average Fire Size by Cause", x = "Cause", y = "Average Fire Size") +
+  theme_minimal()
+```
+
+
+
+## 3.10 Geographic Distribution of Fire Incidences by cause
 
 ```{r}
 # Load necessary libraries
@@ -333,11 +376,92 @@ ggplot() +
   ggtitle("Geographic Distribution of Fire Incidences by cause") +
   xlab("Longitude") +
   ylab("Latitude")
+
 ```
 
-This is some changes
-ok thank you
+# 3.11 Confidence Intervals
 
-This is another change
+```{r}
 
-Trying github .
+# Load necessary libraries
+library(dplyr)
+
+# Load the fire incidence CSV file
+fire_data_path <- "C:/Users/SIMBAH/Desktop/Intro to Data science/Project/Fire incidences DC_VA_MD_cleaned.csv"  # Update with your actual path
+fire_data <- read.csv(fire_data_path)
+
+# Summarize the data to get counts of incidents by state and cause
+incident_counts <- fire_data %>%
+  group_by(STATE, NWCG_GENERAL_CAUSE) %>%
+  summarise(Incident_Count = n(), .groups = 'drop')
+
+# 1. ANOVA: Testing for differences in means across states based on cause
+anova_result <- aov(Incident_Count ~ STATE, data = incident_counts)  # Adjust column names as necessary
+anova_summary <- summary(anova_result)
+
+# Print ANOVA summary for debugging
+print(anova_summary)
+
+# Check if ANOVA summary has results
+if (length(anova_summary) > 0 && !is.null(anova_summary[[1]])) {
+  # Check if p-value is significant
+  if (anova_summary[[1]][["Pr(>F)"]][1] < 0.05) {  
+    tukey_result <- TukeyHSD(anova_result)  # Perform Tukey's HSD test for pairwise comparisons
+    print(tukey_result)
+  } else {
+    print("No significant differences found in ANOVA.")
+  }
+} else {
+  print("ANOVA did not produce valid results.")
+}
+
+# 2. t-test: Compare Virginia (VA) and Maryland (MD) means
+va_incidents <- incident_counts %>% filter(STATE == "VA")  # Using STATE for Virginia
+md_incidents <- incident_counts %>% filter(STATE == "MD")  # Using STATE for Maryland
+
+# Ensure there are enough observations
+if (nrow(va_incidents) > 0 && nrow(md_incidents) > 0) {
+  t_test_result <- t.test(va_incidents$Incident_Count, md_incidents$Incident_Count, var.equal = TRUE)  # Adjust as necessary
+  print(t_test_result)
+} else {
+  print("Not enough data for t-test.")
+}
+
+# 3. Confidence Interval for Virginia's mean
+if (nrow(va_incidents) > 0) {
+  mean_va <- mean(va_incidents$Incident_Count, na.rm = TRUE)
+  std_error_va <- sd(va_incidents$Incident_Count, na.rm = TRUE) / sqrt(nrow(va_incidents))
+
+  # 95% Confidence Interval
+  error_margin <- qt(0.975, df = nrow(va_incidents) - 1) * std_error_va
+  ci_va <- c(mean_va - error_margin, mean_va + error_margin)
+  print(paste("95% Confidence Interval for Virginia's mean:", ci_va[1], "to", ci_va[2]))
+} else {
+  print("No data available for Virginia.")
+}
+```
+
+# 3.12 Analysis of Variance (ANOVA)
+
+```{r}
+
+# 1. ANOVA: Testing for differences in means across states based on cause
+anova_result <- aov(Incident_Count ~ STATE, data = incident_counts)  # Adjust column names as necessary
+anova_summary <- summary(anova_result)
+
+# Print ANOVA summary for debugging
+print(anova_summary)
+
+# Check if ANOVA summary has results
+if (length(anova_summary) > 0 && !is.null(anova_summary)) {
+  # Check if p-value is significant
+  if (anova_summary[[1]][["Pr(>F)"]][1] < 0.05) {  
+    tukey_result <- TukeyHSD(anova_result)  # Perform Tukey's HSD test for pairwise comparisons
+    print(tukey_result)
+  } else {
+    print("No significant differences found in ANOVA.")
+  }
+} else {
+  print("ANOVA did not produce valid results.")
+}
+```
