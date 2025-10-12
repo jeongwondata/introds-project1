@@ -1,0 +1,59 @@
+---
+title: "Object 2"
+author: "Jeongwon Yoo"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: show
+    number_sections: false
+    toc: true
+    toc_depth: 3
+    toc_float: true
+  pdf_document:
+    toc: true
+    toc_depth: 3
+---
+  
+```{r setup, include=FALSE}
+# Set CRAN mirror
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+
+# Install required packages if they are not already installed
+required_packages <- c("sf", "ggplot2", "viridis", "dplyr", "lubridate")
+new_packages <- required_packages[!(required_packages %in% installed.packages()[, "Package"])]
+if (length(new_packages)) {
+  install.packages(new_packages)
+}
+
+# Load libraries
+library(sf)
+library(ggplot2)
+library(viridis)
+library(dplyr)
+library(lubridate)
+```
+
+
+```{r include=FALSE} 
+# Set global chunk options
+knitr::opts_chunk$set(echo = FALSE, results = "markup", warning = FALSE, message = FALSE)
+
+# Set options for number display format
+options(scientific = TRUE, digits = 3)
+```
+
+# Object 2
+
+Investigate Environmental Factors Influencing Fire Incidences-Jeongwon Yoo
+
+## 1. Data Integration
+
+## 2. Correlation Analysis
+
+### 2.1. Raster Maps
+
+### 2.2. Scatter Plots
+
+### 2.3 Regression Diagnostics Plots
+
+### 2.4 Spatial Regression
