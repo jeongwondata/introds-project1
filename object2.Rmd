@@ -48,6 +48,21 @@ Investigate Environmental Factors Influencing Fire Incidences-Jeongwon Yoo
 
 ## 1. Data Integration
 
+```{r}
+# Read CSV
+clean_df = '/Users/jeongwonyoo/Documents/GitHub/introds-project1/Fire incidences DC_VA_MD_cleaned.csv' 
+raw_df = '/Users/jeongwonyoo/Documents/GitHub/introds-project1/Wildfire_Dataset.csv'
+
+library('readr')
+clean_df = read_csv(clean_df)
+raw_df = read_csv(raw_df)
+
+# Make row_df columns names same as clean_df
+names(raw_df) = toupper(names(raw_df))
+
+
+```
+
 ## 2. Correlation Analysis
 
 ### 2.1. Raster Maps
