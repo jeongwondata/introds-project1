@@ -54,7 +54,7 @@ library(ggplot2)
 
 # Read dataset
 ```{r}
-fire <- read.csv("Fire incidences DC_VA_MD_cleaned.csv")
+fire <- read.csv("C:/Users/SIMBAH/Documents/GitHub/introds-project1/Fire incidences DC_VA_MD_cleaned.csv")
 ```
 
 
@@ -92,6 +92,7 @@ general_cause_counts <- table(fire$NWCG_GENERAL_CAUSE)
 general_cause_counts <- sort(general_cause_counts, decreasing = TRUE)
 general_cause_counts
 ```
+
 
 ```{r}
 cause_df <- data.frame(
@@ -163,4 +164,5 @@ ggplot(data = fire, aes(x = NWCG_GENERAL_CAUSE, fill = AREA_TYPE)) +
   labs(title = "Distribution of Fire Causes by Area Type",
        x = "General Cause", y = "Count") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+# its ok we will synchronize
 ```
