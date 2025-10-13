@@ -1,0 +1,111 @@
+---
+title: "Object 2"
+author: "Jeongwon Yoo"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: show
+    number_sections: false
+    toc: true
+    toc_depth: 3
+    toc_float: true
+  pdf_document:
+    toc: true
+    toc_depth: 3
+---
+  
+```{r setup, include=FALSE}
+# Set CRAN mirror
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+
+# Install required packages if they are not already installed
+required_packages <- c("sf", "ggplot2", "viridis", "dplyr", "lubridate")
+new_packages <- required_packages[!(required_packages %in% installed.packages()[, "Package"])]
+if (length(new_packages)) {
+  install.packages(new_packages)
+}
+
+# Load libraries
+library(sf)
+library(ggplot2)
+library(viridis)
+library(dplyr)
+library(lubridate)
+library(tigris)
+library(readr)
+library(tidyr)
+```
+
+
+```{r include=FALSE} 
+# Set global chunk options
+knitr::opts_chunk$set(echo = FALSE, results = "markup", warning = FALSE, message = FALSE)
+
+# Set options for number display format
+options(scientific = TRUE, digits = 3)
+```
+
+# Object 2
+
+Investigate Environmental Factors Influencing Fire Incidences-Jeongwon Yoo
+
+## 1. Data Integration
+
+```{r}
+# Read CSV
+clean_df = '/Users/jeongwonyoo/Documents/GitHub/introds-project1/Fire incidences DC_VA_MD_cleaned.csv' 
+raw_df = '/Users/jeongwonyoo/Documents/GitHub/introds-project1/Wildfire_Dataset.csv'
+
+library('readr')
+clean_df = read_csv(clean_df)
+raw_df = read_csv(raw_df)
+
+# Make row_df columns names same as clean_df
+names(raw_df) = toupper(names(raw_df))
+
+# Add State name on raw data
+options(tigris_use_cache = TRUE)
+
+states <- tigris::states(cb = TRUE, year = 2023) %>%
+    st_transform(4326) %>%
+    select(STUSPS, NAME, geometry)
+
+sf_raw <- st_as_sf(raw_df %>% filter(!is.na(LATITUDE), !is.na(LONGITUDE)),coords = c("LONGITUDE","LATITUDE"), crs = 4326, remove=FALSE)
+
+raw_with_state_poly <- st_join(sf_raw, states, join = st_within) %>%
+    st_drop_geometry() %>%
+    rename(STATE = STUSPS)
+
+# sort target data(state(VA,DC,MD),time(2018))
+target_states <- c("DC","MD","VA")
+target_year   <- 2018
+cols_keep     <- c("STATE","FIRE_YEAR","Month","LATITUDE","LONGITUDE",
+                   "DATETIME","PR","RMAX","RMIN","SPH","SRAD","TMMN",
+                   "TMMX","VS","BI","FM100","FM1000","ERC","ETR","PET","VPD")
+
+# Make sub dataset of clean_df
+clean_sub <- clean_df %>%
+    filter(STATE %in% target_states,
+           FIRE_YEAR == target_year) %>% 
+    select(any_of(cols_keep))
+
+# Make sub dataset of raw_df
+raw_sub <- raw_with_state_poly %>%
+    filter(STATE %in% target_states,
+           lubridate::year(lubridate::as_datetime(DATETIME)) == target_year) %>%
+    drop_na(LATITUDE, LONGITUDE) %>%
+    select(any_of(cols_keep))
+
+# organized data check
+str('raw_sub')
+```
+
+## 2. Correlation Analysis
+
+### 2.1. Raster Maps
+
+### 2.2. Scatter Plots
+
+### 2.3 Regression Diagnostics Plots
+
+### 2.4 Spatial Regression

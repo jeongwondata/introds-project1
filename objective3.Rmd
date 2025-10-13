@@ -86,7 +86,6 @@ ggplot(fire, aes(x = NWCG_CAUSE_CLASSIFICATION)) +
        y = "Number of Incidents")
 ```
 
-just checking
 #Frequency count of causes
 ```{r}
 general_cause_counts <- table(fire$NWCG_GENERAL_CAUSE)
@@ -141,4 +140,27 @@ fire$AREA_TYPE <- ifelse(fire$FIPS_NAME %in% urban_counties, "Urban",
 
 # View distribution
 table(fire$AREA_TYPE)
+```
+```{r}
+ggplot(data = fire, aes(x = AREA_TYPE, fill = AREA_TYPE)) +
+  geom_bar() +
+  labs(title = "Distribution of Fire Incidents by Area Type",
+       x = "Area Type",
+       y = "Number of Fire Incidents") +
+  scale_fill_manual(values = c("steelblue", "orange", "gray")) +
+  theme_minimal(base_size = 12)
+```
+
+# Frequency table of causes by area type
+```{r}
+cause_table <- table(fire$AREA_TYPE, fire$NWCG_GENERAL_CAUSE)
+cause_table
+```
+#Distibution of fire cause by area type
+```{r}
+ggplot(data = fire, aes(x = NWCG_GENERAL_CAUSE, fill = AREA_TYPE)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Distribution of Fire Causes by Area Type",
+       x = "General Cause", y = "Count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
