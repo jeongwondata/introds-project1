@@ -19,7 +19,7 @@ output:
 options(repos = c(CRAN = "https://cloud.r-project.org"))
 
 # Install required packages if they are not already installed
-required_packages <- c("sf", "ggplot2", "viridis", "dplyr", "lubridate")
+required_packages <- c("sf", "ggplot2", "viridis", "dplyr", "lubridate",'corrplot')
 new_packages <- required_packages[!(required_packages %in% installed.packages()[, "Package"])]
 if (length(new_packages)) {
   install.packages(new_packages)
@@ -34,6 +34,7 @@ library(lubridate)
 library(tigris)
 library(readr)
 library(tidyr)
+library(corrplot)
 ```
 
 
@@ -100,7 +101,20 @@ raw_sub <- raw_with_state_poly %>%
 str('raw_sub')
 ```
 
+Call new dataset for the analysis
+```{r}
+dp = '/Users/jeongwonyoo/Documents/GitHub/introds-project1/clean_object2_2018_DCMDVA.csv'
+object2 = read_csv(dp)
+```
+
 ## 2. Correlation Analysis
+Correlation Analysis
+
+```{r}
+env_vars <- object2 %>% select(PR, RMAX, RMIN, SPH, SRAD, TMMN, TMMX, VS, FM100, FM1000, ERC, ETR, PET, VPD)
+cor_mat <- cor(env_vars, use = "complete.obs")
+corrplot(cor_mat, method = "color", tl.cex = 0.8)
+```
 
 ### 2.1. Raster Maps
 
