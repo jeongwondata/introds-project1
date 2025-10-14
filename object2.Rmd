@@ -143,27 +143,51 @@ plot_raster <- function(df, var, bins = 60, to_celsius = FALSE) {
 plot_raster(object2, "TMMX", bins = 70, to_celsius = TRUE)
 ```
 
-The binned raster map shows a west-to-east warming gradient, with higher maximum temperatures concentrated in the eastern and southeastern bins and cooler conditions in the western highlands, consistent with regional topography and supporting the observed positive association between heat and fire potential.
+TMMX(C) binned raster map
+
+- The binned raster map shows a west-to-east warming gradient, with higher maximum temperatures concentrated in the eastern and southeastern bins and cooler conditions in the western highlands, consistent with regional topography and supporting the observed positive association between heat and fire potential.
 
 ```{r}
 plot_raster(object2, "VPD",  bins = 70)
 ```
 
+VPD binned raster map
+
+- Higher VPD (drier air) pockets appear in many of the same eastern and central areas that are warmer
+- The co-location of high TMMX and high VPD indicates jointly hot-dry conditions that elevate fire potential
+
 ```{r}
 plot_raster(object2, "FM100", bins = 70)
 ```
+
+FM100 binned raster map
+
+- Higher VPD (drier air) pockets appear in many of the same eastern and central areas that are warmer
+- The co-location of high TMMX and high VPD indicates jointly hot-dry conditions that elevate fire potential
 
 ```{r}
 plot_raster(object2, "PR",   bins = 70)
 ``` 
 
+PR(precipitation) binned raster map
+- Precipitation is patchy and relatively low over much of the domain
+- Where PR is higher, ERC tends to be lower in the ERC map (Figure 7), consistent with wetting effects
+
 ```{r}
 plot_raster(object2, "VS",   bins = 70)
 ```
 
+VS(Wind Speed) binned raster map
+- Wind has localized maxima rather than a single gradient
+- These wind pockets may not align perfectly with ERC spatial highs, which is consistent with wind acting more as a spread/short-term enhancer than a persistent background driver.
+
 ```{r}
 plot_raster(object2, "ERC",  bins = 70)
 ```
+
+ERC binned raster map
+- ERC is elevated in clusters that overlap warmer and drier bins
+- Spatial agreement with high TMMX and high VPD, and disagreement with high FM100, reinforces the correlation findings.
 
 ### 2.2. Scatter Plots
 
@@ -173,8 +197,8 @@ Scatter Plots
 ggplot(object2, aes(x = TMMX, y = BI)) +geom_point(alpha = 0.4)+     geom_smooth(method = "lm", se = FALSE, color = "red")+labs(title = "Fire Index vs. Temperature")
 ```
 
-Figure 2. BI vs. TMMX.
-The fitted line shows a weak relationship and the distribution is dominated by many zero or near-zero BI values. This zero inflation and visible heteroscedasticity limit the usefulness of simple bivariate OLS. A multivariable model that controls for dryness (VPD), fuel moisture (FM100), wind (VS), and precipitation (PR) is more appropriate. If the goal is to model BI directly, consider restricting to BI > 0 or using a model that handles zero inflation or nonlinearity.
+BI vs. TMMX
+- The fitted line shows a weak relationship and the distribution is dominated by many zero or near-zero BI values. This zero inflation and visible heteroscedasticity limit the usefulness of simple bivariate OLS. A multivariable model that controls for dryness (VPD), fuel moisture (FM100), wind (VS), and precipitation (PR) is more appropriate. If the goal is to model BI directly, consider restricting to BI > 0 or using a model that handles zero inflation or nonlinearity.
 
 ### 2.3 Regression Diagnostics Plots
 
@@ -186,12 +210,14 @@ par(mfrow = c(2, 2))
 plot(model)  # residuals, Q-Q, leverage plots
 ```
 
-Figure 3. OLS diagnostic plots.
-Residuals vs. fitted values display a fan shape and curvature, which indicates heteroscedasticity and potential nonlinearity. The Q–Q plot shows tail deviations, suggesting heavy-tailed residuals and outliers. The scale-location plot confirms nonconstant variance. The residuals-versus-leverage plot highlights a few influential observations. These patterns show that standard OLS assumptions are not well met and motivate spatial regression or robust alternatives.
+OLS diagnostic for BI model
+- Residuals vs. fitted values display a fan shape and curvature, which indicates heteroscedasticity and potential nonlinearity
+- The Q–Q plot shows tail deviations, suggesting heavy-tailed residuals and outliers. The scale-location plot confirms nonconstant variance.
+- The residuals vs leverage plot highlights a few influential observations. These patterns show that standard OLS assumptions are not well met and motivate spatial regression or robust alternatives.
 
 ### 2.4 Spatial Regression
 
-```{r}
+```{r eval=FALSE}
 # Build spatial dataset and weights for modeling
 # Collapse to one record per location to avoid duplicate coordinates by date
 o2 <- object2 |>
@@ -228,7 +254,7 @@ if (spdep::n.comp.nb(nb_k)$nc > 1) {
 lw_k <- spdep::nb2listw(nb_k, style = "W", zero.policy = FALSE)
 ```
 
-```{r}
+```{r eval=FALSE}
 # Fit models
 ols <- lm(ERC ~ TMMX + VPD + FM100 + PR + VS + RMAX + SRAD, data = dat)
 sar <- lagsarlm(ERC ~ TMMX + VPD + FM100 + PR + VS + RMAX + SRAD,
@@ -248,8 +274,9 @@ moran.test(residuals(sem), lw_k, zero.policy = TRUE)        # SEM
 Residual spatial autocorrelation after SEM.
 Moran’s I on the SEM residuals is not significant (I ≈ −0.059, z ≈ −0.76, p ≈ 0.78). This indicates that the spatial error model adequately removed spatial clustering in the residuals. In practical terms, the spatial structure is captured by the model and remaining errors are close to spatially random.
 
-What this implies for drivers of fire activity.
-Taken together, the figures are consistent with the following: hot and dry conditions (higher TMMX and VPD) are associated with increased fire potential, while higher fuel moisture and wetter conditions (FM100, FM1000, PR, higher humidity) are associated with reduced fire potential. Because FM100 and FM1000 are strongly collinear, use only one of them in the final model. Report SAR vs. SEM selection using AIC, then present the signs and significance of the key coefficients, followed by the non-significant Moran’s I on residuals to demonstrate that model assumptions are satisfied.
+## Object2 Conclusion
 
-# last edit by simba
-# added other plots and finialising it(Jeongwon)
+Across figures, hotter and drier conditions (higher TMMX and VPD) spatially coincide with higher ERC, while higher fuel moisture (FM100 and FM1000) opposes ERC. Precipitation and humidity indicators also oppose ERC but with patchier spatial expression. Wind shows localized peaks and likely modulates spread rather than setting the background hazard. These visual patterns match the correlation matrix and justify focusing the spatial regression on TMMX, VPD, and one fuel-moisture variable (FM100) while avoiding FM100 and FM1000 together due to collinearity.
+
+- last edit by simba
+- added other plots and finialising it(Jeongwon)
