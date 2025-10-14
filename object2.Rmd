@@ -19,8 +19,10 @@ output:
 options(repos = c(CRAN = "https://cloud.r-project.org"))
 
 # Install required packages if they are not already installed
-required_packages <- c("sf", "ggplot2", "viridis", "dplyr", "lubridate")
-new_packages <- required_packages[!(required_packages %in% installed.packages()[, "Package"])]
+required_packages = c("sf","ggplot2","viridis","dplyr","lubridate",
+                       "corrplot","tigris","readr","tidyr",
+                       "spatialreg","spdep")
+new_packages = required_packages[!(required_packages %in% installed.packages()[, "Package"])]
 if (length(new_packages)) {
   install.packages(new_packages)
 }
@@ -34,6 +36,9 @@ library(lubridate)
 library(tigris)
 library(readr)
 library(tidyr)
+library(corrplot)
+library(spdep)
+library(spatialreg)
 ```
 
 
@@ -66,31 +71,31 @@ names(raw_df) = toupper(names(raw_df))
 # Add State name on raw data
 options(tigris_use_cache = TRUE)
 
-states <- tigris::states(cb = TRUE, year = 2023) %>%
+states = tigris::states(cb = TRUE, year = 2023) %>%
     st_transform(4326) %>%
     select(STUSPS, NAME, geometry)
 
-sf_raw <- st_as_sf(raw_df %>% filter(!is.na(LATITUDE), !is.na(LONGITUDE)),coords = c("LONGITUDE","LATITUDE"), crs = 4326, remove=FALSE)
+sf_raw = st_as_sf(raw_df %>% filter(!is.na(LATITUDE), !is.na(LONGITUDE)),coords = c("LONGITUDE","LATITUDE"), crs = 4326, remove=FALSE)
 
-raw_with_state_poly <- st_join(sf_raw, states, join = st_within) %>%
+raw_with_state_poly = st_join(sf_raw, states, join = st_within) %>%
     st_drop_geometry() %>%
     rename(STATE = STUSPS)
 
 # sort target data(state(VA,DC,MD),time(2018))
-target_states <- c("DC","MD","VA")
-target_year   <- 2018
-cols_keep     <- c("STATE","FIRE_YEAR","Month","LATITUDE","LONGITUDE",
+target_states = c("DC","MD","VA")
+target_year = 2018
+cols_keep = c("STATE","FIRE_YEAR","Month","LATITUDE","LONGITUDE",
                    "DATETIME","PR","RMAX","RMIN","SPH","SRAD","TMMN",
-                   "TMMX","VS","BI","FM100","FM1000","ERC","ETR","PET","VPD")
+                  "TMMX","VS","BI","FM100","FM1000","ERC","ETR","PET","VPD")
 
 # Make sub dataset of clean_df
-clean_sub <- clean_df %>%
+clean_sub = clean_df %>%
     filter(STATE %in% target_states,
            FIRE_YEAR == target_year) %>% 
     select(any_of(cols_keep))
 
 # Make sub dataset of raw_df
-raw_sub <- raw_with_state_poly %>%
+raw_sub = raw_with_state_poly %>%
     filter(STATE %in% target_states,
            lubridate::year(lubridate::as_datetime(DATETIME)) == target_year) %>%
     drop_na(LATITUDE, LONGITUDE) %>%
@@ -100,13 +105,281 @@ raw_sub <- raw_with_state_poly %>%
 str('raw_sub')
 ```
 
+Call new dataset for the analysis
+```{r}
+dp = '/Users/jeongwonyoo/Documents/GitHub/introds-project1/clean_object2_2018_DCMDVA.csv'
+object2 = read_csv(dp)
+```
+
 ## 2. Correlation Analysis
+Correlation Analysis
+
+```{r}
+env_vars = object2 %>% select(PR, RMAX, RMIN, SPH, SRAD, TMMN, TMMX, VS, FM100, FM1000, ERC, ETR, PET, VPD)
+cor_mat = cor(env_vars, use = "complete.obs")
+corrplot(cor_mat, method = "color", tl.cex = 0.8)
+```
+
+Figure 1. Correlation heatmap.
+The heatmap shows strong negative correlations between ERC and fuel moisture variables (FM100, FM1000), indicating that wetter fuels are associated with lower fire potential. ERC is moderately positively correlated with atmospheric dryness and heat (VPD, TMMX). Humidity indicators (RMAX, RMIN, SPH) are strongly negatively correlated with VPD, which is expected since higher humidity coincides with lower vapor pressure deficit. FM100 and FM1000 are highly positively correlated, so they should not be used together in the same model due to multicollinearity risk.
 
 ### 2.1. Raster Maps
 
+Figure: Maximum Temperature Distribution (°C)
+```{r}
+library(dplyr); library(ggplot2)
+
+plot_raster <- function(df, var, bins = 60, to_celsius = FALSE) {
+    z <- if (to_celsius) df[[var]] - 273.15 else df[[var]]
+    ggplot(df, aes(LONGITUDE, LATITUDE, z = z)) +
+        stat_summary_2d(fun = mean, bins = bins, na.rm = TRUE) +
+        coord_fixed(expand = FALSE) +
+        scale_fill_viridis_c(name = var) +
+        labs(title = paste(var, "Distribution")) +
+        theme_minimal(base_size = 12)
+}
+```
+
+```{r}
+plot_raster(object2, "TMMX", bins = 70, to_celsius = TRUE)
+```
+
+TMMX(C) binned raster map
+
+- The binned raster map shows a west-to-east warming gradient, with higher maximum temperatures concentrated in the eastern and southeastern bins and cooler conditions in the western highlands, consistent with regional topography and supporting the observed positive association between heat and fire potential.
+
+```{r}
+plot_raster(object2, "VPD",  bins = 70)
+```
+
+VPD binned raster map
+
+- Higher VPD (drier air) pockets appear in many of the same eastern and central areas that are warmer
+- The co-location of high TMMX and high VPD indicates jointly hot-dry conditions that elevate fire potential
+
+```{r}
+plot_raster(object2, "FM100", bins = 70)
+```
+
+FM100 binned raster map
+
+- Higher VPD (drier air) pockets appear in many of the same eastern and central areas that are warmer
+- The co-location of high TMMX and high VPD indicates jointly hot-dry conditions that elevate fire potential
+
+```{r}
+plot_raster(object2, "PR",   bins = 70)
+``` 
+
+PR(precipitation) binned raster map
+- Precipitation is patchy and relatively low over much of the domain
+- Where PR is higher, ERC tends to be lower in the ERC map (Figure 7), consistent with wetting effects
+
+```{r}
+plot_raster(object2, "VS",   bins = 70)
+```
+
+VS(Wind Speed) binned raster map
+- Wind has localized maxima rather than a single gradient
+- These wind pockets may not align perfectly with ERC spatial highs, which is consistent with wind acting more as a spread/short-term enhancer than a persistent background driver.
+
+```{r}
+plot_raster(object2, "ERC",  bins = 70)
+```
+
+ERC binned raster map
+- ERC is elevated in clusters that overlap warmer and drier bins
+- Spatial agreement with high TMMX and high VPD, and disagreement with high FM100, reinforces the correlation findings.
+
 ### 2.2. Scatter Plots
+
+Scatter Plots
+
+```{r}
+ggplot(object2, aes(x = TMMX, y = BI)) +geom_point(alpha = 0.4)+     geom_smooth(method = "lm", se = FALSE, color = "red")+labs(title = "Fire Index vs. Temperature")
+```
+
+BI vs. TMMX
+
+- The fitted line shows a weak relationship and the distribution is dominated by many zero or near-zero BI values. This zero inflation and visible heteroscedasticity limit the usefulness of simple bivariate OLS. A multivariable model that controls for dryness (VPD), fuel moisture (FM100), wind (VS), and precipitation (PR) is more appropriate. If the goal is to model BI directly, consider restricting to BI > 0 or using a model that handles zero inflation or nonlinearity.
 
 ### 2.3 Regression Diagnostics Plots
 
+Regression Diagnostics Plots
+
+```{r}
+model = lm(BI ~ TMMX + PR + VS + VPD, data = object2)
+par(mfrow = c(2, 2))
+plot(model)  # residuals, Q-Q, leverage plots
+```
+
+OLS diagnostic for BI model
+- Residuals vs. fitted values display a fan shape and curvature, which indicates heteroscedasticity and potential nonlinearity
+- The Q–Q plot shows tail deviations, suggesting heavy-tailed residuals and outliers. The scale-location plot confirms nonconstant variance
+- The residuals vs leverage plot highlights a few influential observations. These patterns show that standard OLS assumptions are not well met and motivate spatial regression or robust alternatives.
+
 ### 2.4 Spatial Regression
-# last edit by simba
+
+The code chunk is taking long-running: disabled during knit (works in Console).
+Keep full code here for reproducibility and results pasted below.
+
+```{r eval=FALSE, echo=TRUE}
+o2 = object2 %>%
+  group_by(LONGITUDE, LATITUDE) %>%
+  summarise(across(c(PR, RMAX, RMIN, SPH, SRAD, TMMN, TMMX, VS,
+                     FM100, FM1000, ERC, ETR, PET, VPD),
+                   ~mean(.x, na.rm = TRUE)), .groups = "drop") %>%
+  mutate(id = row_number())
+
+vars = c("ERC","TMMX","VPD","FM100","PR","VS","RMAX","SRAD")
+
+keep_logical = complete.cases(o2[, vars])
+
+dat = o2[keep_logical, c(vars, "id"), drop = FALSE]
+stopifnot(nrow(dat) > 1)
+
+coords = as.matrix(o2[, c("LONGITUDE","LATITUDE")])
+coords_k = coords[dat$id, , drop = FALSE]
+stopifnot(nrow(coords_k) == nrow(dat))
+
+k = 8
+repeat {
+  nb = knn2nb(knearneigh(coords_k, k = k, longlat = TRUE))
+  if (n.comp.nb(nb)$nc == 1 || k >= 20) break
+  k = k + 2
+}
+
+lw_k = nb2listw(nb, style = "W", zero.policy = FALSE)
+
+xvars = c("TMMX","VPD","FM100","PR","VS","RMAX","SRAD")
+dat_std = dat
+dat_std[xvars] = scale(dat_std[xvars])
+
+ols = lm(ERC ~ TMMX + VPD + FM100 + PR + VS + RMAX + SRAD, data = dat_std)
+sem = errorsarlm(ERC ~ TMMX + VPD + FM100 + PR + VS + RMAX + SRAD,
+                  data = dat_std, listw = lw_k, na.action = na.exclude)
+
+summary(ols)
+summary(sem)
+moran.test(residuals(ols), lw_k)
+moran.test(residuals(sem), lw_k)
+```
+
+#### Result
+
+- summary(ols)
+
+Call:
+lm(formula = ERC ~ TMMX + VPD + FM100 + PR + VS + RMAX + SRAD, 
+    data = dat_std)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-4.7305 -1.2031  0.2945  1.4940  3.0632 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  19.0706     0.2347  81.252  < 2e-16 ***
+TMMX         -1.5034     1.3189  -1.140 0.258491    
+VPD           1.0727     1.2690   0.845 0.401050    
+FM100        -4.8261     1.1851  -4.072 0.000129 ***
+PR           -1.0014     0.3540  -2.829 0.006203 ** 
+VS           -0.2254     0.3353  -0.672 0.503884    
+RMAX          0.1135     0.8120   0.140 0.889270    
+SRAD          0.2321     0.7866   0.295 0.768867    
+---
+Signif. codes:  0 ‘’ 0.001 ‘’ 0.01 ‘’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 2.005 on 65 degrees of freedom
+Multiple R-squared:  0.9028,	Adjusted R-squared:  0.8924 
+F-statistic: 86.28 on 7 and 65 DF,  p-value: < 2.2e-16
+
+- summary(sem)
+
+Call:errorsarlm(formula = ERC ~ TMMX + VPD + FM100 + PR + VS + RMAX + 
+    SRAD, data = dat_std, listw = lw_k, na.action = na.exclude)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-4.00770 -1.09347  0.12968  1.09124  2.98286 
+
+Type: error 
+Coefficients: (asymptotic standard errors) 
+            Estimate Std. Error z value  Pr(>|z|)
+(Intercept) 19.12921    0.60304 31.7211 < 2.2e-16
+TMMX        -2.10797    0.88425 -2.3839   0.01713
+VPD          2.08839    0.91643  2.2788   0.02268
+FM100       -4.32810    0.81694 -5.2979 1.171e-07
+PR          -0.56119    0.24728 -2.2694   0.02324
+VS          -0.23018    0.26144 -0.8804   0.37863
+RMAX        -0.50397    0.56725 -0.8884   0.37430
+SRAD        -0.11324    0.57086 -0.1984   0.84277
+
+Lambda: 0.72518, LR test value: 36.149, p-value: 1.8279e-09
+Asymptotic standard error: 0.082947
+    z-value: 8.7427, p-value: < 2.22e-16
+Wald statistic: 76.435, p-value: < 2.22e-16
+
+Log likelihood: -132.0661 for error model
+ML residual variance (sigma squared): 1.9885, (sigma: 1.4101)
+Number of observations: 73 
+Number of parameters estimated: 10 
+AIC: 284.13, (AIC for lm: 318.28)
+
+- moran.test(residuals(ols), lw_k)
+
+	Moran I test under randomisation
+
+data:  residuals(ols)  
+weights: lw_k    
+
+Moran I statistic standard deviate = 9.0678, p-value < 2.2e-16
+alternative hypothesis: greater
+sample estimates:
+Moran I statistic       Expectation          Variance 
+      0.450965435      -0.013888889       0.002628031 
+
+- moran.test(residuals(sem), lw_k)
+
+	Moran I test under randomisation
+
+data:  residuals(sem)  
+weights: lw_k    
+
+Moran I statistic standard deviate = -0.12209, p-value = 0.5486
+alternative hypothesis: greater
+sample estimates:
+Moran I statistic       Expectation          Variance 
+     -0.020133928      -0.013888889       0.002616504 
+
+#### Result Description
+
+Model comparison
+
+- SEM preferred: AIC(SEM) = 284.13 vs AIC(OLS) = 318.28 (ΔAIC ≈ 34 → choose SEM)
+- Spatial error (λ): 0.725 (SE 0.083), z = 8.74, p < 0.001 → strong spatial error dependence present.
+
+Residual spatial autocorrelation
+
+- OLS residuals: Moran’s I = 0.451, z = 9.07, p < 0.001 → pronounced spatial clustering (OLS inadequate).
+- SEM residuals: Moran’s I = −0.020, z = −0.12, p = 0.55 → not significant → spatial structure adequately modeled
+
+SEM coefficients (standardized predictors)
+- VPD (+): β = +2.088, p = 0.023 → drier air increases ERC
+- FM100 (−): β = −4.328, p < 0.001 → higher fuel moisture lowers ERC (strongest effect)
+- PR (−): β = −0.561, p = 0.023 → more precipitation lowers ERC
+- TMMX (±): β = −2.108, p = 0.017 → negative once VPD is included (suppression/collinearity with VPD)
+- VS, RMAX, SRAD: not significant in this multivariable, spatially corrected model.
+
+Interpretation highlights
+
+- Key drivers: higher dryness (VPD) and lower fuel moisture (FM100) raise fire potential; precipitation reduces it
+- TMMX vs VPD: because they’re correlated, VPD captures the hot–dry signal; with VPD in the model, TMMX can flip negative (suppression). For a simpler story, use VPD as the primary dryness proxy
+
+The SEM substantially improves fit and removes residual spatial clustering, confirming that dryness↑, fuel moisture↓, and precipitation↓ are the dominant environmental controls on ERC.
+
+## Object2 Conclusion
+
+Across figures, hotter and drier conditions (higher TMMX and VPD) spatially coincide with higher ERC, while higher fuel moisture (FM100 and FM1000) opposes ERC. Precipitation and humidity indicators also oppose ERC but with patchier spatial expression. Wind shows localized peaks and likely modulates spread rather than setting the background hazard. These visual patterns match the correlation matrix and justify focusing the spatial regression on TMMX, VPD, and one fuel-moisture variable (FM100) while avoiding FM100 and FM1000 together due to collinearity.
+
+- last edit by simba
+- added other plots and finializing it(Jeongwon)
