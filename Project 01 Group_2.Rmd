@@ -127,9 +127,148 @@ ggplot(data = Study_Area) +
 ```
 # CHAPTER 3: Analysis and Results
 
-# 3.1 Objective 1
+# 3.1 Objective 3: Categorize Types of Fire Incidents and Assess Causes
 
-## 3.1.1 EXPLORATORY DATA ANALYSIS
+```{r init, include=F}
+library(ezids)
+library(ggplot2)
+library(treemapify)
+```
+
+## 3.1.1 Read dataset
+```{r}
+fire <- read.csv("Fire incidences DC_VA_MD_cleaned.csv")
+```
+
+
+## 3.1.2 Quick overview
+```{r}
+str(fire)
+head(fire)
+```
+
+## 3.1.3 summary 
+```{r}
+xkablesummary(fire, title = "Fire Statistics Summary")
+```
+
+## 3.1.4 CATEGORIZATION: Fire Incident Types and Causes
+
+```{r}
+table(fire$NWCG_CAUSE_CLASSIFICATION)
+```
+
+## 3.1.5 Bar Chart
+```{r}
+ggplot(fire, aes(x = NWCG_CAUSE_CLASSIFICATION)) +
+  geom_bar(col = "black", fill = "white", alpha = 0.7) +
+  labs(title = "Fire Cause Classification",
+       x = "Cause Classification",
+       y = "Number of Incidents")
+```
+
+## 3.1.6 Frequency count of causes
+```{r}
+general_cause_counts <- table(fire$NWCG_GENERAL_CAUSE)
+general_cause_counts <- sort(general_cause_counts, decreasing = TRUE)
+general_cause_counts
+```
+
+```{r}
+fire_cause_summary <- as.data.frame(table(fire$NWCG_GENERAL_CAUSE))
+colnames(fire_cause_summary) <- c("Cause", "Count")
+ggplot(fire_cause_summary, aes(area = Count, fill = Cause, label = paste(Cause, "\n", Count))) +
+  geom_treemap() +
+  geom_treemap_text(colour = "white", place = "centre", grow = TRUE) +
+  labs(title = "Fire Incident Causes",
+       subtitle = "Proportion of Each General Cause across All Regions") +
+  theme(legend.position = "none")
+```
+
+## 3.1.7 Segregation based on states
+
+```{r}
+table(fire$STATE)
+```
+
+## 3.1.8 Bar chart on fire incidences in States.
+
+```{r}
+state_counts <- table(fire$STATE)
+barplot(state_counts,
+        main = "Fire Incidents by State",
+        xlab = "State",
+        ylab = "Number of Incidents",
+        col = "red")
+``` 
+
+## 3.1.9 Classification of urban and rural counties in DC,MD and VA.
+
+```{r}
+urban_counties <- c("Washington, D.C.",
+                    "Montgomery County", "Prince George's County", "Baltimore City",
+                    "Anne Arundel County", "Howard County",
+                    "Fairfax County", "Arlington County", "Virginia Beach City",
+                    "Chesterfield County", "Henrico County", "Loudoun County")
+
+rural_counties <- c("Garrett County", "Allegany County", "Washington County",
+                    "Caroline County", "Somerset County", "Dorchester County",
+                    "Bath County", "Highland County", "Scott County",
+                    "Lee County", "Tazewell County", "Wise County")
+
+# Create new Area Type variable
+fire$AREA_TYPE <- ifelse(fire$FIPS_NAME %in% urban_counties, "Urban",
+                       ifelse(fire$FIPS_NAME %in% rural_counties, "Rural", "Other"))
+
+# View distribution
+table(fire$AREA_TYPE)
+```
+```{r}
+ggplot(fire, aes(x = AREA_TYPE, y = FIRE_SIZE, fill = AREA_TYPE)) +
+  geom_boxplot(alpha = 0.7, color = "black", outlier.colour = "red") +
+  labs(title = "Fire Size Distribution by Area Type",
+       x = "Area Type",
+       y = "Fire Size") +
+  scale_fill_manual(values = c("blue", "orange", "black")) +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"),
+        axis.text.x = element_text(angle = 0, hjust = 0.5))
+```
+
+## 3.1.10 Frequency table of causes by area type
+
+```{r}
+cause_table <- table(fire$AREA_TYPE, fire$NWCG_GENERAL_CAUSE)
+cause_table
+```
+
+## 3.1.11 Distibution of fire cause by area type
+
+```{r}
+ggplot(data = fire, aes(x = NWCG_GENERAL_CAUSE, fill = AREA_TYPE)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Distribution of Fire Causes by Area Type",
+       x = "General Cause", y = "Count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+## 3.1.12 Identify risk factors associated with different areas.
+
+```{r}
+risk_factor <- chisq.test(table(fire$AREA_TYPE, fire$NWCG_GENERAL_CAUSE))
+risk_factor
+```
+Fire causes differs significantly across area types (Urban, Rural, Other).
+
+## 3.1.13 Normality Check for Fire Size
+```{r}
+qqnorm(fire$FIRE_SIZE, main = "Fire Size") ## Assess whether the distribution of fire sizes follows a normal distribution.
+qqline(fire$FIRE_SIZE)
+```
+
+# 3.2 Objective 1
+
+## 3.2.1 EXPLORATORY DATA ANALYSIS
 
 ```{r load_fire_data, echo=TRUE}
 # Load necessary libraries
@@ -143,7 +282,7 @@ fire_data <- read.csv(fire_data_path)
 str(fire_data)
 ```
 
-## 3.1.2 Summary Statistics
+## 3.2.2 Summary Statistics
 
 ```{r summary_statistics, echo=TRUE}
 # Summary statistics
@@ -154,7 +293,7 @@ missing_values <- colSums(is.na(fire_data))
 print(missing_values)
 ```
 
-## 3.1.3 Distribution of Fire Incidences
+## 3.2.3 Distribution of Fire Incidences
 
 ```{r total_fire_incidents_by_state_filtered, echo=TRUE, fig.width=8, fig.height=4}
 # Load necessary libraries
@@ -182,7 +321,7 @@ ggplot(fire_data_summary, aes(x = STATE, y = total_fire_count, fill = STATE)) +
   theme(legend.title = element_blank())
 ```
 
-## 3.1.4 Heatmap of incidences by month and state
+## 3.2.4 Heatmap of incidences by month and state
 
 ```{r}
 # Load necessary libraries
@@ -215,7 +354,7 @@ ggplot(heatmap_data, aes(x = Month, y = STATE, fill = total_incidents)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels
 ```
 
-## 3.1.5 Fire Incidents by Cause
+## 3.2.5 Fire Incidents by Cause
 
 ```{r}
 # Load necessary libraries
@@ -253,7 +392,7 @@ ggplot(cause_summary, aes(x = interaction(FIRE_YEAR, Month), y = total_incidents
   theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels
 ```
 
-## 3.1.6 Fire cause classification
+## 3.2.6 Fire cause classification
 
 ```{r}
 cause_summary <- fire_data %>%
@@ -269,7 +408,7 @@ ggplot(cause_summary, aes(x = reorder(NWCG_GENERAL_CAUSE, total_incidents), y = 
   ylab("Total Number of Fire Incidents")
 ```
 
-## 3.1.7 Fire incidence by cause and  state
+## 3.2.7 Fire incidence by cause and  state
 
 ```{r}
 # Load necessary libraries
@@ -296,7 +435,7 @@ ggplot(cause_summary, aes(x = reorder(NWCG_GENERAL_CAUSE, total_incidents), y = 
   scale_fill_brewer(palette = "Set1")  # Optional: Use a color palette for better distinction
 ```
 
-## 3.1.8 Fire Incidences by Ownership
+## 3.2.8 Fire Incidences by Ownership
 
 ```{r}
 ownership_summary <- fire_data %>%
@@ -311,7 +450,7 @@ ggplot(ownership_summary, aes(x = "", y = total_incidents, fill = OWNER_DESCR)) 
   ylab("")
 ```
 
-# 3.1.9 Average fire size by cause
+# 3.2.9 Average fire size by cause
 
 ```{r}
 # Load necessary libraries
@@ -337,7 +476,7 @@ ggplot(size_analysis, aes(x = reorder(NWCG_GENERAL_CAUSE, -avg_fire_size), y = a
 ```
 
 
-## 3.1.10 Geographic Distribution of Fire Incidences by cause
+## 3.2.10 Geographic Distribution of Fire Incidences by cause
 
 ```{r}
 # Load necessary libraries
@@ -382,7 +521,7 @@ ggplot() +
 
 ```
 
-## 3.1.11 Confidence Intervals
+## 3.2.11 Confidence Intervals
 
 ```{r}
 
@@ -444,7 +583,7 @@ if (nrow(va_incidents) > 0) {
 }
 ```
 
-## 3.1.12 Analysis of Variance (ANOVA)
+## 3.2.12 Analysis of Variance (ANOVA)
 
 ```{r}
 
@@ -469,11 +608,11 @@ if (length(anova_summary) > 0 && !is.null(anova_summary)) {
 }
 ```
 
-# 3.2 Objective 2:
+# 3.3 Objective 2:
 
 Investigate Environmental Factors Influencing Fire Incidences-Jeongwon Yoo
 
-## 3.2.1 Data Integration
+## 3.3.1 Data Integration
 
 The code below is eval=FALSE since raw data(Wildfire Dataset(from Kaggle)) it's too big and can't be uploaded on Github.
 
@@ -532,7 +671,7 @@ dp = 'clean_object2_2018_DCMDVA.csv'
 object2 = read_csv(dp)
 ```
 
-## 3.2.2 Correlation Analysis
+## 3.3.2 Correlation Analysis
 
 ```{r}
 env_vars = object2 %>% select(PR, RMAX, RMIN, SPH, SRAD, TMMN, TMMX, VS, FM100, FM1000, ERC, ETR, PET, VPD)
@@ -544,7 +683,7 @@ Correlation heatmap
 
 The heatmap shows strong negative correlations between ERC and fuel moisture variables (FM100, FM1000), indicating that wetter fuels are associated with lower fire potential. ERC is moderately positively correlated with atmospheric dryness and heat (VPD, TMMX). Humidity indicators (RMAX, RMIN, SPH) are strongly negatively correlated with VPD, which is expected since higher humidity coincides with lower vapor pressure deficit. FM100 and FM1000 are highly positively correlated, so they should not be used together in the same model due to multicollinearity risk.
 
-## 3.2.3 Raster Maps
+## 3.3.3 Raster Maps
 
 Figure: Maximum Temperature Distribution (°C)
 ```{r}
@@ -611,7 +750,7 @@ ERC binned raster map
 - ERC is elevated in clusters that overlap warmer and drier bins
 - Spatial agreement with high TMMX and high VPD, and disagreement with high FM100, reinforces the correlation findings.
 
-## 3.2.4 Scatter Plots
+## 3.3.4 Scatter Plots
 
 Scatter Plots
 
@@ -623,7 +762,7 @@ BI vs. TMMX
 
 - The fitted line shows a weak relationship and the distribution is dominated by many zero or near-zero BI values. This zero inflation and visible heteroscedasticity limit the usefulness of simple bivariate OLS. A multivariable model that controls for dryness (VPD), fuel moisture (FM100), wind (VS), and precipitation (PR) is more appropriate. If the goal is to model BI directly, consider restricting to BI > 0 or using a model that handles zero inflation or nonlinearity.
 
-## 3.2.5 Regression Diagnostics Plots
+## 3.3.5 Regression Diagnostics Plots
 
 Regression Diagnostics Plots
 
@@ -638,7 +777,7 @@ OLS diagnostic for BI model
 - The Q–Q plot shows tail deviations, suggesting heavy-tailed residuals and outliers. The scale-location plot confirms nonconstant variance
 - The residuals vs leverage plot highlights a few influential observations. These patterns show that standard OLS assumptions are not well met and motivate spatial regression or robust alternatives.
 
-## 3.2.6 Spatial Regression
+## 3.3.6 Spatial Regression
 
 The code chunk is taking long-running: disabled during knit (works in Console).
 Keep full code here for reproducibility and results pasted below.
@@ -772,7 +911,7 @@ sample estimates:
 Moran I statistic       Expectation          Variance 
      -0.020133928      -0.013888889       0.002616504 
 
-### 3.2.6 Result Description
+### 3.3.6 Result Description
 
 Model comparison
 
@@ -801,144 +940,5 @@ The SEM substantially improves fit and removes residual spatial clustering, conf
 ## Object2 Conclusion
 
 Across figures, hotter and drier conditions (higher TMMX and VPD) spatially coincide with higher ERC, while higher fuel moisture (FM100 and FM1000) opposes ERC. Precipitation and humidity indicators also oppose ERC but with patchier spatial expression. Wind shows localized peaks and likely modulates spread rather than setting the background hazard. These visual patterns match the correlation matrix and justify focusing the spatial regression on TMMX, VPD, and one fuel-moisture variable (FM100) while avoiding FM100 and FM1000 together due to collinearity.
-
-# 3.3 Objective 3: Categorize Types of Fire Incidents and Assess Causes
-
-```{r init, include=F}
-library(ezids)
-library(ggplot2)
-library(treemapify)
-```
-
-## 3.3.1 Read dataset
-```{r}
-fire <- read.csv("Fire incidences DC_VA_MD_cleaned.csv")
-```
-
-
-## 3.3.2 Quick overview
-```{r}
-str(fire)
-head(fire)
-```
-
-## 3.3.3 summary 
-```{r}
-xkablesummary(fire, title = "Fire Statistics Summary")
-```
-
-## 3.3.4 CATEGORIZATION: Fire Incident Types and Causes
-
-```{r}
-table(fire$NWCG_CAUSE_CLASSIFICATION)
-```
-
-## 3.3.5 Bar Chart
-```{r}
-ggplot(fire, aes(x = NWCG_CAUSE_CLASSIFICATION)) +
-  geom_bar(col = "black", fill = "white", alpha = 0.7) +
-  labs(title = "Fire Cause Classification",
-       x = "Cause Classification",
-       y = "Number of Incidents")
-```
-
-## 3.3.6 Frequency count of causes
-```{r}
-general_cause_counts <- table(fire$NWCG_GENERAL_CAUSE)
-general_cause_counts <- sort(general_cause_counts, decreasing = TRUE)
-general_cause_counts
-```
-
-```{r}
-fire_cause_summary <- as.data.frame(table(fire$NWCG_GENERAL_CAUSE))
-colnames(fire_cause_summary) <- c("Cause", "Count")
-ggplot(fire_cause_summary, aes(area = Count, fill = Cause, label = paste(Cause, "\n", Count))) +
-  geom_treemap() +
-  geom_treemap_text(colour = "white", place = "centre", grow = TRUE) +
-  labs(title = "Fire Incident Causes",
-       subtitle = "Proportion of Each General Cause across All Regions") +
-  theme(legend.position = "none")
-```
-
-## 3.3.7 Segregation based on states
-
-```{r}
-table(fire$STATE)
-```
-
-## 3.3.8 Bar chart on fire incidences in States.
-
-```{r}
-state_counts <- table(fire$STATE)
-barplot(state_counts,
-        main = "Fire Incidents by State",
-        xlab = "State",
-        ylab = "Number of Incidents",
-        col = "red")
-``` 
-
-## 3.3.9 Classification of urban and rural counties in DC,MD and VA.
-
-```{r}
-urban_counties <- c("Washington, D.C.",
-                    "Montgomery County", "Prince George's County", "Baltimore City",
-                    "Anne Arundel County", "Howard County",
-                    "Fairfax County", "Arlington County", "Virginia Beach City",
-                    "Chesterfield County", "Henrico County", "Loudoun County")
-
-rural_counties <- c("Garrett County", "Allegany County", "Washington County",
-                    "Caroline County", "Somerset County", "Dorchester County",
-                    "Bath County", "Highland County", "Scott County",
-                    "Lee County", "Tazewell County", "Wise County")
-
-# Create new Area Type variable
-fire$AREA_TYPE <- ifelse(fire$FIPS_NAME %in% urban_counties, "Urban",
-                       ifelse(fire$FIPS_NAME %in% rural_counties, "Rural", "Other"))
-
-# View distribution
-table(fire$AREA_TYPE)
-```
-```{r}
-ggplot(fire, aes(x = AREA_TYPE, y = FIRE_SIZE, fill = AREA_TYPE)) +
-  geom_boxplot(alpha = 0.7, color = "black", outlier.colour = "red") +
-  labs(title = "Fire Size Distribution by Area Type",
-       x = "Area Type",
-       y = "Fire Size") +
-  scale_fill_manual(values = c("blue", "orange", "black")) +
-  theme_minimal(base_size = 12) +
-  theme(plot.title = element_text(hjust = 0.5, face = "bold"),
-        axis.text.x = element_text(angle = 0, hjust = 0.5))
-```
-
-## 3.3.10 Frequency table of causes by area type
-
-```{r}
-cause_table <- table(fire$AREA_TYPE, fire$NWCG_GENERAL_CAUSE)
-cause_table
-```
-
-## 3.3.11 Distibution of fire cause by area type
-
-```{r}
-ggplot(data = fire, aes(x = NWCG_GENERAL_CAUSE, fill = AREA_TYPE)) +
-  geom_bar(position = "dodge") +
-  labs(title = "Distribution of Fire Causes by Area Type",
-       x = "General Cause", y = "Count") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-```
-
-## 3.3.12 Identify risk factors associated with different areas.
-
-```{r}
-risk_factor <- chisq.test(table(fire$AREA_TYPE, fire$NWCG_GENERAL_CAUSE))
-risk_factor
-```
-Fire causes differs significantly across area types (Urban, Rural, Other).
-
-## 3.3.13 Normality Check for Fire Size
-```{r}
-qqnorm(fire$FIRE_SIZE, main = "Fire Size") ## Assess whether the distribution of fire sizes follows a normal distribution.
-qqline(fire$FIRE_SIZE)
-```
 
 # Chapter 4: Conclusion
