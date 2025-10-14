@@ -35,6 +35,13 @@ library(ggplot2)
 library(viridis)
 library(dplyr)
 library(lubridate)
+library(tigris)
+library(readr)
+library(tidyr)
+library(corrplot)
+library(spdep)
+library(spatialreg)
+
 ```
 
 
