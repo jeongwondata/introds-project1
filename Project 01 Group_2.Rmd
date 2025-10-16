@@ -990,3 +990,4 @@ The SEM substantially improves fit and removes residual spatial clustering, conf
 Across figures, hotter and drier conditions (higher TMMX and VPD) spatially coincide with higher ERC, while higher fuel moisture (FM100 and FM1000) opposes ERC. Precipitation and humidity indicators also oppose ERC but with patchier spatial expression. Wind shows localized peaks and likely modulates spread rather than setting the background hazard. These visual patterns match the correlation matrix and justify focusing the spatial regression on TMMX, VPD, and one fuel-moisture variable (FM100) while avoiding FM100 and FM1000 together due to collinearity.
 
 # Chapter 4: Conclusion
+welldone everyone
