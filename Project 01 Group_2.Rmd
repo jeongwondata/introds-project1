@@ -125,6 +125,7 @@ ggplot(data = Study_Area) +
   ) +
   ggtitle("Project Study Area Map")
 ```
+
 # CHAPTER 3: Analysis and Results
 
 ## 3.1 EXPLORATORY DATA ANALYSIS
