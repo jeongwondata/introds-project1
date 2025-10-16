@@ -57,7 +57,7 @@ library(treemapify)
 
 # Read dataset
 ```{r}
-fire <- read.csv("Fire incidences DC_VA_MD_cleaned.csv")
+fire <- read.csv("Fire incidences DC_VA_MD_cleands.csv")
 ```
 
 
@@ -135,8 +135,7 @@ rural_counties <- c("Garrett County", "Allegany County", "Washington County",
                     "Lee County", "Tazewell County", "Wise County")
 
 # Create new Area Type variable
-fire$AREA_TYPE <- ifelse(fire$FIPS_NAME %in% urban_counties, "Urban",
-                       ifelse(fire$FIPS_NAME %in% rural_counties, "Rural", "Other"))
+fire$AREA_TYPE <- ifelse(fire$FIPS_NAME %in% urban_counties, "Urban", "Rural")
 
 # View distribution
 table(fire$AREA_TYPE)
