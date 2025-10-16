@@ -56,7 +56,7 @@ Investigate Environmental Factors Influencing Fire Incidences-Jeongwon Yoo
 
 ## 1. Data Integration
 
-```{r}
+```{r eval=FALSE, echo=T}
 # Read CSV
 clean_df = '/Users/jeongwonyoo/Documents/GitHub/introds-project1/Fire incidences DC_VA_MD_cleaned.csv' 
 raw_df = '/Users/jeongwonyoo/Documents/GitHub/introds-project1/Wildfire_Dataset.csv'
@@ -109,6 +109,33 @@ Call new dataset for the analysis
 ```{r}
 dp = '/Users/jeongwonyoo/Documents/GitHub/introds-project1/clean_object2_2018_DCMDVA.csv'
 object2 = read_csv(dp)
+```
+
+```{r var-table, echo=FALSE, message=FALSE, warning=FALSE}
+library(dplyr)
+library(knitr)
+
+vars <- tibble::tribble(
+  ~Variable,      ~Description,                                   ~Units,
+  "PR",           "Precipitation",                                 "mm/day",
+  "RMAX / RMIN",  "Relative humidity (Maximum / Minimum)",         "%", 
+  "SPH",          "Specific humidity",                             "kg/kg",
+  "SRAD",         "Solar radiation",                               "W/m²",
+  "TMMN / TMMX",  "Temperatures (Minimum / Maximum)",              "°C",
+  "VS",           "Wind speed",                                    "m/s",
+  "VPD",          "Vapor pressure deficit",                        "kPa",
+  "FM100 / FM1000","Fuel moisture indices",                        "%",
+  "ERC",          "Energy Release Component",                      "index",
+  "BI",           "Burning Index",                                 "index",
+  "ETR / PET",    "Evapotranspiration (ETR) / Potential (PET)",    "mm/day"
+)
+
+knitr::kable(
+  vars,
+  format = "html",
+  caption = "Variable definitions used in the analysis",
+  align = c("l","l","c")
+)
 ```
 
 ## 2. Correlation Analysis

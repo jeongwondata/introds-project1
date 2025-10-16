@@ -11,7 +11,7 @@
 
 <meta name="author" content="Jeongwon Yoo" />
 
-<meta name="date" content="2025-10-14" />
+<meta name="date" content="2025-10-15" />
 
 <title>Object 2</title>
 
@@ -1569,7 +1569,7 @@ border-radius: 0px;
 
 <h1 class="title toc-ignore">Object 2</h1>
 <h4 class="author">Jeongwon Yoo</h4>
-<h4 class="date">2025-10-14</h4>
+<h4 class="date">2025-10-15</h4>
 
 </div>
 
@@ -1580,8 +1580,194 @@ border-radius: 0px;
 Incidences-Jeongwon Yoo</p>
 <div id="data-integration" class="section level2">
 <h2>1. Data Integration</h2>
-<pre><code>##  chr &quot;raw_sub&quot;</code></pre>
+<pre class="r"><code># Read CSV
+clean_df = &#39;/Users/jeongwonyoo/Documents/GitHub/introds-project1/Fire incidences DC_VA_MD_cleaned.csv&#39; 
+raw_df = &#39;/Users/jeongwonyoo/Documents/GitHub/introds-project1/Wildfire_Dataset.csv&#39;
+
+library(&#39;readr&#39;)
+clean_df = read_csv(clean_df)
+raw_df = read_csv(raw_df)
+
+# Make row_df columns names same as clean_df
+names(raw_df) = toupper(names(raw_df))
+
+# Add State name on raw data
+options(tigris_use_cache = TRUE)
+
+states = tigris::states(cb = TRUE, year = 2023) %&gt;%
+    st_transform(4326) %&gt;%
+    select(STUSPS, NAME, geometry)
+
+sf_raw = st_as_sf(raw_df %&gt;% filter(!is.na(LATITUDE), !is.na(LONGITUDE)),coords = c(&quot;LONGITUDE&quot;,&quot;LATITUDE&quot;), crs = 4326, remove=FALSE)
+
+raw_with_state_poly = st_join(sf_raw, states, join = st_within) %&gt;%
+    st_drop_geometry() %&gt;%
+    rename(STATE = STUSPS)
+
+# sort target data(state(VA,DC,MD),time(2018))
+target_states = c(&quot;DC&quot;,&quot;MD&quot;,&quot;VA&quot;)
+target_year = 2018
+cols_keep = c(&quot;STATE&quot;,&quot;FIRE_YEAR&quot;,&quot;Month&quot;,&quot;LATITUDE&quot;,&quot;LONGITUDE&quot;,
+                   &quot;DATETIME&quot;,&quot;PR&quot;,&quot;RMAX&quot;,&quot;RMIN&quot;,&quot;SPH&quot;,&quot;SRAD&quot;,&quot;TMMN&quot;,
+                  &quot;TMMX&quot;,&quot;VS&quot;,&quot;BI&quot;,&quot;FM100&quot;,&quot;FM1000&quot;,&quot;ERC&quot;,&quot;ETR&quot;,&quot;PET&quot;,&quot;VPD&quot;)
+
+# Make sub dataset of clean_df
+clean_sub = clean_df %&gt;%
+    filter(STATE %in% target_states,
+           FIRE_YEAR == target_year) %&gt;% 
+    select(any_of(cols_keep))
+
+# Make sub dataset of raw_df
+raw_sub = raw_with_state_poly %&gt;%
+    filter(STATE %in% target_states,
+           lubridate::year(lubridate::as_datetime(DATETIME)) == target_year) %&gt;%
+    drop_na(LATITUDE, LONGITUDE) %&gt;%
+    select(any_of(cols_keep))
+
+# organized data check
+str(&#39;raw_sub&#39;)</code></pre>
 <p>Call new dataset for the analysis</p>
+<table>
+<caption>
+Variable definitions used in the analysis
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Variable
+</th>
+<th style="text-align:left;">
+Description
+</th>
+<th style="text-align:center;">
+Units
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+PR
+</td>
+<td style="text-align:left;">
+Precipitation
+</td>
+<td style="text-align:center;">
+mm/day
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+RMAX / RMIN
+</td>
+<td style="text-align:left;">
+Relative humidity (Maximum / Minimum)
+</td>
+<td style="text-align:center;">
+%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+SPH
+</td>
+<td style="text-align:left;">
+Specific humidity
+</td>
+<td style="text-align:center;">
+kg/kg
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+SRAD
+</td>
+<td style="text-align:left;">
+Solar radiation
+</td>
+<td style="text-align:center;">
+W/m²
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+TMMN / TMMX
+</td>
+<td style="text-align:left;">
+Temperatures (Minimum / Maximum)
+</td>
+<td style="text-align:center;">
+°C
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+VS
+</td>
+<td style="text-align:left;">
+Wind speed
+</td>
+<td style="text-align:center;">
+m/s
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+VPD
+</td>
+<td style="text-align:left;">
+Vapor pressure deficit
+</td>
+<td style="text-align:center;">
+kPa
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+FM100 / FM1000
+</td>
+<td style="text-align:left;">
+Fuel moisture indices
+</td>
+<td style="text-align:center;">
+%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ERC
+</td>
+<td style="text-align:left;">
+Energy Release Component
+</td>
+<td style="text-align:center;">
+index
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+BI
+</td>
+<td style="text-align:left;">
+Burning Index
+</td>
+<td style="text-align:center;">
+index
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ETR / PET
+</td>
+<td style="text-align:left;">
+Evapotranspiration (ETR) / Potential (PET)
+</td>
+<td style="text-align:center;">
+mm/day
+</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="correlation-analysis" class="section level2">
 <h2>2. Correlation Analysis</h2>
