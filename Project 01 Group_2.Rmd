@@ -990,6 +990,31 @@ The SEM substantially improves fit and removes residual spatial clustering, conf
 
 ## 4.1 Conclusion
 
+Final Integrated Conclusion
+
+1. Comprehensive Relationship between Fire Incidents and Environmental Factors
+   Fire occurrences across Washington, D.C., Maryland, and Virginia in 2018 were not random events but rather the outcome of interacting geographic, climatic, and anthropogenic factors.
+   Among all variables, Vapor Pressure Deficit (VPD), Fuel Moisture (FM100), and Precipitation (PR) emerged as the most critical predictors of fire potential. Drier air (higher VPD), lower fuel moisture, and limited rainfall jointly amplified the Energy Release Component (ERC), indicating greater fire intensity and risk.
+   Conversely, high fuel moisture and increased precipitation significantly mitigated fire potential, confirming that dryness and wetness dynamics are the dominant controls on regional fire patterns.
+
+2. Spatial Dependence and Model Performance
+   The Spatial Error Model (SEM) substantially outperformed the Ordinary Least Squares (OLS) model (AIC = 284.13 vs 318.28), capturing spatial autocorrelation that OLS failed to explain.
+   The strong spatial error coefficient (λ = 0.725, p < 0.001) and Moran’s I reduction from 0.451 to –0.020 confirmed that the SEM successfully eliminated residual spatial clustering.
+   Therefore, SEM provides more reliable and interpretable coefficients for spatially dependent fire data and should be prioritized for regional fire modeling.
+
+3. Regional and Temporal Patterns
+   Hot spot analysis revealed that *fire incidents were concentrated in central and eastern parts of Maryland and Virginia*, while western areas were relatively moist and less prone to fire.
+   Temporal heat maps suggested a clear seasonal peak during the summer months, when temperature, dryness, and solar radiation interact to reduce fuel moisture.
+   Moreover, the cause-based analysis showed that urban areas experienced more human-related fires (residential, electrical, vehicular), whereas rural zones exhibited more natural or vegetation-driven fires, emphasizing the need for region-specific prevention strategies.
+
+4. Policy and Management Implications
+
+   Short-term monitoring: Continuously track real-time VPD, FM100, and PR to update regional fire alerts and     optimize emergency resource deployment.
+   Long-term mitigation: Focus fuel management and firebreak construction in the identified central–eastern      hotspots.
+   Urban strategy: Strengthen inspections of electrical systems and residential safety.
+   Rural strategy: Emphasize vegetation control and fuel reduction under persistent dryness.
+     Overall, a data-driven, spatially adaptive fire prevention framework is essential for effective mitigation.
+
 Across figures, hotter and drier conditions (higher TMMX and VPD) spatially coincide with higher ERC, while higher fuel moisture (FM100 and FM1000) opposes ERC. Precipitation and humidity indicators also oppose ERC but with patchier spatial expression. Wind shows localized peaks and likely modulates spread rather than setting the background hazard. These visual patterns match the correlation matrix and justify focusing the spatial regression on TMMX, VPD, and one fuel-moisture variable (FM100) while avoiding FM100 and FM1000 together due to collinearity.
 
 # 4.2 Reccomendations 
