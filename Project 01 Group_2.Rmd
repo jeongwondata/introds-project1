@@ -800,19 +800,19 @@ ERC(Energy release component) binned raster map
 
 ## 3.3.4 Scatter Plots
 
-Scatter Plots
+## 3.3.4.1 Scatter Plots
 
 ```{r}
 ggplot(object2, aes(x = TMMX, y = BI)) +geom_point(alpha = 0.4)+     geom_smooth(method = "lm", se = FALSE, color = "red")+labs(title = "Fire Index vs. Temperature")
 ```
 
-BI(Burning index) vs. TMMX
+## 3.3.4.2 BI(Burning index) vs. TMMX
 
 - The fitted line shows a weak relationship and the distribution is dominated by many zero or near-zero BI values. This zero inflation and visible heteroscedasticity limit the usefulness of simple bivariate OLS. A multivariable model that controls for dryness (VPD), fuel moisture (FM100), wind (VS), and precipitation (PR) is more appropriate. If the goal is to model BI directly, consider restricting to BI > 0 or using a model that handles zero inflation or nonlinearity.
 
 ## 3.3.5 Regression Diagnostics Plots
 
-Regression Diagnostics Plots
+## 3.3.5.1.Regression Diagnostics Plots
 
 ```{r}
 model = lm(BI ~ TMMX + PR + VS + VPD, data = object2)
@@ -820,7 +820,8 @@ par(mfrow = c(2, 2))
 plot(model)  # residuals, Q-Q, leverage plots
 ```
 
-OLS diagnostic for BI model
+# 3.3.5.2.OLS diagnostic for BI model
+
 - Residuals vs. fitted values display a fan shape and curvature, which indicates heteroscedasticity and potential nonlinearity
 - The Q–Q plot shows tail deviations, suggesting heavy-tailed residuals and outliers. The scale-location plot confirms nonconstant variance
 - The residuals vs leverage plot highlights a few influential observations. These patterns show that standard OLS assumptions are not well met and motivate spatial regression or robust alternatives.
