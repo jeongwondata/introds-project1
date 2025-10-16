@@ -872,7 +872,7 @@ moran.test(residuals(ols), lw_k)
 moran.test(residuals(sem), lw_k)
 ```
 
-### Result
+### Description of Results
 
 - summary(ols)
 
@@ -991,3 +991,4 @@ Across figures, hotter and drier conditions (higher TMMX and VPD) spatially coin
 
 # Chapter 4: Conclusion
 welldone everyone
+mayb we to fix the echo
