@@ -47,7 +47,7 @@ library(spatialreg)
 
 ```{r}
 # Set global chunk options
-knitr::opts_chunk$set(echo = FALSE, results = "markup", warning = FALSE, message = FALSE)
+knitr::opts_chunk$set(echo = TRUE, results = "markup", warning = FALSE, message = FALSE)
 
 # Set options for number display format
 options(scientific = TRUE, digits = 3)
@@ -622,7 +622,7 @@ Investigate Environmental Factors Influencing Fire Incidences-Jeongwon Yoo
 
 The code below is eval=FALSE since raw data(Wildfire Dataset(from Kaggle)) it's too big and can't be uploaded on Github.
 
-```{r eval=FALSE, echo=T}
+```{r eval=FALSE}
 # Read CSV
 clean_df = '/Users/jeongwonyoo/Documents/GitHub/introds-project1/Fire incidences DC_VA_MD_cleaned.csv' 
 raw_df = '/Users/jeongwonyoo/Documents/GitHub/introds-project1/Wildfire_Dataset.csv'
@@ -679,7 +679,7 @@ object2 = read_csv(dp)
 
 Here is a table description for the object3 dataset
 
-```{r var-table, echo=FALSE, message=FALSE, warning=FALSE}
+```{r var-table, message=FALSE, warning=FALSE}
 library(dplyr)
 library(knitr)
 
@@ -717,21 +717,16 @@ corrplot(cor_mat, method = "color", tl.cex = 0.8)
 
 Correlation heatmap
 
-We classify correlations as strong when |r| ≥ 0.60. These thresholds are conventional and context-dependent.
-
-- Fuel moisture vs. ERC (strong negative): Higher FM100/FM1000 → lower ERC → wetter fuels suppress fire potential
-
-- Dryness/heat vs. ERC (moderate positive): Higher VPD and (to a lesser extent) TMMX → higher ERC.
-
-- Humidity vs. VPD (strong negative): RMAX/RMIN/SPH increase as VPD decreases (expected: humid air lowers VPD)
-
-- Redundancy: FM100 and FM1000 are highly collinear (carry the same information)
-
-Because FM100–FM1000 and VPD–TMMX are redundant pairs, use FM100 and VPD as the primary drivers in the spatial model.
+- Analysis based on Pearson correlation among environmental variables
+- Strong correlation criterion: |r| ≥ 0.60
+- ERC vs FM100/FM1000: strong negative correlation → wetter fuels suppress fire potential
+- VPD vs TMMX/SRAD: positive correlation → hotter and sunnier conditions associated with drier air
+- Humidity variables (RMAX/RMIN/SPH): moderate negative correlations with VPD → higher humidity linked to reduced dryness
 
 ## 3.3.3 Raster Maps
 
-Figure: Maximum Temperature Distribution (°C)
+- Raster maps visualize spatial distribution of environmental variables and their relation to fire potential
+- Each pixel represents mean value of variable within geographic grid
 
 ```{r}
 library(dplyr); library(ggplot2)
@@ -753,7 +748,7 @@ plot_raster(object2, "TMMX", bins = 70, to_celsius = TRUE)
 
 TMMX(Maximum Temperatures) binned raster map
 
-- The binned raster map shows a west-to-east warming gradient, with higher maximum temperatures concentrated in the eastern and southeastern bins and cooler conditions in the western highlands, consistent with regional topography and supporting the observed positive association between heat and fire potential.
+- higher in central–eastern areas, lower in west, overlaps with higher VPD zones
 
 ```{r}
 plot_raster(object2, "VPD",  bins = 70)
@@ -761,8 +756,7 @@ plot_raster(object2, "VPD",  bins = 70)
 
 VPD(Vapor presure deficit) binned raster map
 
-- Higher VPD (drier air) pockets appear in many of the same eastern and central areas that are warmer
-- The co-location of high TMMX and high VPD indicates jointly hot-dry conditions that elevate fire potential
+- high-dryness pockets in warm central/eastern areas, primary dryness proxy recommended to avoid collinearity with TMMX
 
 ```{r}
 plot_raster(object2, "FM100", bins = 70)
@@ -770,8 +764,8 @@ plot_raster(object2, "FM100", bins = 70)
 
 FM100(Fuel Moisture indices) binned raster map
 
-- The map shows pockets of wetter fuels (higher FM100) in central–northern/eastern areas and drier fuels (lower FM100) toward the west/southwest
-- Implying higher fire potential where FM100 is low and aligning with hot–dry patterns from VPD/TMMX
+- wetter fuels (higher FM100) in central–north/east
+- drier (lower FM100) in west/southwest → higher fire potential where low FM100 coincides with high VPD
 
 ```{r}
 plot_raster(object2, "PR",   bins = 70)
@@ -779,59 +773,62 @@ plot_raster(object2, "PR",   bins = 70)
 
 PR(precipitation) binned raster map
 
-- Precipitation is patchy and relatively low over much of the domain
-- Where PR is higher, ERC tends to be lower in the ERC map (Figure 7), consistent with wetting effects
+- patchy distribution
+- higher PR corresponds to lower ERC, consistent with wetting effects
 
 ```{r}
 plot_raster(object2, "VS",   bins = 70)
 ```
 
 VS(Wind Speed) binned raster map
-- Wind has localized maxima rather than a single gradient
-- These wind pockets may not align perfectly with ERC spatial highs, which is consistent with wind acting more as a spread/short-term enhancer than a persistent background driver.
+
+- localized maxima not always aligned with high ERC zones → wind acts as short-term enhancer, not persistent driver
 
 ```{r}
 plot_raster(object2, "ERC",  bins = 70)
 ```
 
 ERC(Energy release component) binned raster map
-- ERC is elevated in clusters that overlap warmer and drier bins
-- Spatial agreement with high TMMX and high VPD, and disagreement with high FM100, reinforces the correlation findings.
+
+- elevated in warm-dry clusters
+- strong spatial alignment with high TMMX and VPD and inverse relation with FM100
 
 ## 3.3.4 Scatter Plots
 
-## 3.3.4.1 Scatter Plots
 
 ```{r}
 ggplot(object2, aes(x = TMMX, y = BI)) +geom_point(alpha = 0.4)+     geom_smooth(method = "lm", se = FALSE, color = "red")+labs(title = "Fire Index vs. Temperature")
 ```
 
-## 3.3.4.2 BI(Burning index) vs. TMMX
+BI(Burning index) vs. TMMX
 
-- The fitted line shows a weak relationship and the distribution is dominated by many zero or near-zero BI values. This zero inflation and visible heteroscedasticity limit the usefulness of simple bivariate OLS. A multivariable model that controls for dryness (VPD), fuel moisture (FM100), wind (VS), and precipitation (PR) is more appropriate. If the goal is to model BI directly, consider restricting to BI > 0 or using a model that handles zero inflation or nonlinearity.
+- Scatter of BI (Burning Index) vs TMMX shows weak positive relationship
+- Distribution dominated by many zero or near-zero BI values → zero inflation and heteroscedasticity
+- Suggestion: apply multivariable model incorporating VPD, FM100, VS, and PR to capture combined effects
+- For modeling BI directly: consider subset with BI > 0 or use model suited for zero-inflated data
 
 ## 3.3.5 Regression Diagnostics Plots
 
-## 3.3.5.1.Regression Diagnostics Plots
 
 ```{r}
 model = lm(BI ~ TMMX + PR + VS + VPD, data = object2)
 par(mfrow = c(2, 2))
-plot(model)  # residuals, Q-Q, leverage plots
+plot(model)
 ```
 
-# 3.3.5.2.OLS diagnostic for BI model
+- Residuals vs Fitted: fan-shaped and curved → heteroscedasticity and nonlinearity
+- Q–Q Plot: heavy tails → outliers and non-normal residuals
+- Scale–Location Plot: confirms nonconstant variance
+- Residuals vs Leverage: presence of high-leverage points → potential influence on coefficient stability
 
-- Residuals vs. fitted values display a fan shape and curvature, which indicates heteroscedasticity and potential nonlinearity
-- The Q–Q plot shows tail deviations, suggesting heavy-tailed residuals and outliers. The scale-location plot confirms nonconstant variance
-- The residuals vs leverage plot highlights a few influential observations. These patterns show that standard OLS assumptions are not well met and motivate spatial regression or robust alternatives.
+- OLS assumptions violated → spatial or robust models recommended
 
 ## 3.3.6 Spatial Regression
 
 The code chunk is taking long-running: disabled during knit (works in Console).
 Keep full code here for reproducibility and results pasted below.
 
-```{r eval=FALSE, echo=T}
+```{r eval=FALSE}
 o2 = object2 %>%
   group_by(LONGITUDE, LATITUDE) %>%
   summarise(across(c(PR, RMAX, RMIN, SPH, SRAD, TMMN, TMMX, VS,
@@ -962,29 +959,15 @@ Moran I statistic       Expectation          Variance
 
 ### 3.3.8 Result Description
 
-Model comparison
+- OLS Model: significant negative effects from FM100 and PR; other predictors less significant,  residual diagnostics indicate heteroscedasticity and spatial clustering
 
-- SEM preferred: AIC(SEM) = 284.13 vs AIC(OLS) = 318.28 (ΔAIC ≈ 34 → choose SEM)
-- Spatial error (λ): 0.725 (SE 0.083), z = 8.74, p < 0.001 → strong spatial error dependence present.
+- SEM Model: improved fit (AIC 284.13 vs 318.28); strong spatial dependence (λ = 0.725, p < 0.001)
 
-Residual spatial autocorrelation
-
-- OLS residuals: Moran’s I = 0.451, z = 9.07, p < 0.001 → pronounced spatial clustering (OLS inadequate).
-- SEM residuals: Moran’s I = −0.020, z = −0.12, p = 0.55 → not significant → spatial structure adequately modeled
-
-SEM coefficients (standardized predictors)
-- VPD (+): β = +2.088, p = 0.023 → drier air increases ERC
-- FM100 (−): β = −4.328, p < 0.001 → higher fuel moisture lowers ERC (strongest effect)
-- PR (−): β = −0.561, p = 0.023 → more precipitation lowers ERC
-- TMMX (±): β = −2.108, p = 0.017 → negative once VPD is included (suppression/collinearity with VPD)
-- VS, RMAX, SRAD: not significant in this multivariable, spatially corrected model.
-
-Interpretation highlights
-
-- Key drivers: higher dryness (VPD) and lower fuel moisture (FM100) raise fire potential; precipitation reduces it
-- TMMX vs VPD: because they’re correlated, VPD captures the hot–dry signal; with VPD in the model, TMMX can flip negative (suppression). For a simpler story, use VPD as the primary dryness proxy
-
-The SEM substantially improves fit and removes residual spatial clustering, confirming that dryness↑, fuel moisture↓, and precipitation↓ are the dominant environmental controls on ERC.
+- Model comparison: SEM preferred → captures spatial error structure and improves fit
+Dryness and moisture as key drivers: high VPD and low FM100 elevate fire potential, precipitation reduces it
+- Temperature vs VPD: VPD better represents combined heat-dryness effect; reduces multicollinearity and sign reversal
+- Residual patterns: SEM removes spatial clustering and produces stable estimates
+- Overall finding: spatial error modeling confirms that dry atmosphere, low fuel moisture, and limited rainfall are dominant environmental controls on fire energy release in DC–MD–VA regions.
 
 ##  Chapter 4: Conclusion and Recoomendations
 
@@ -993,9 +976,8 @@ The SEM substantially improves fit and removes residual spatial clustering, conf
 Final Integrated Conclusion
 
 1. Comprehensive Relationship between Fire Incidents and Environmental Factors
-   Fire occurrences across Washington, D.C., Maryland, and Virginia in 2018 were not random events but rather the outcome of interacting geographic, climatic, and anthropogenic factors.
-   Among all variables, Vapor Pressure Deficit (VPD), Fuel Moisture (FM100), and Precipitation (PR) emerged as the most critical predictors of fire potential. Drier air (higher VPD), lower fuel moisture, and limited rainfall jointly amplified the Energy Release Component (ERC), indicating greater fire intensity and risk.
-   Conversely, high fuel moisture and increased precipitation significantly mitigated fire potential, confirming that dryness and wetness dynamics are the dominant controls on regional fire patterns.
+
+Fire occurrences across Washington, D.C., Maryland, and Virginia in 2018 were not random events but rather the outcome of interacting geographic, climatic, and anthropogenic factors. Among all variables, Vapor Pressure Deficit (VPD), Fuel Moisture (FM100), and Precipitation (PR) emerged as the most critical predictors of fire potential. Drier air (higher VPD), lower fuel moisture, and limited rainfall jointly amplified the Energy Release Component (ERC), indicating greater fire intensity and risk.Conversely, high fuel moisture and increased precipitation significantly mitigated fire potential, confirming that dryness and wetness dynamics are the dominant controls on regional fire patterns.
 
 2. Spatial Dependence and Model Performance
    The Spatial Error Model (SEM) substantially outperformed the Ordinary Least Squares (OLS) model (AIC = 284.13 vs 318.28), capturing spatial autocorrelation that OLS failed to explain.
@@ -1003,22 +985,20 @@ Final Integrated Conclusion
    Therefore, SEM provides more reliable and interpretable coefficients for spatially dependent fire data and should be prioritized for regional fire modeling.
 
 3. Regional and Temporal Patterns
-   Hot spot analysis revealed that *fire incidents were concentrated in central and eastern parts of Maryland and Virginia*, while western areas were relatively moist and less prone to fire.
-   Temporal heat maps suggested a clear seasonal peak during the summer months, when temperature, dryness, and solar radiation interact to reduce fuel moisture.
-   Moreover, the cause-based analysis showed that urban areas experienced more human-related fires (residential, electrical, vehicular), whereas rural zones exhibited more natural or vegetation-driven fires, emphasizing the need for region-specific prevention strategies.
+Hot spot analysis revealed that fire incidents were concentrated in central and eastern parts of Maryland and Virginia, while western areas were relatively moist and less prone to fire. Temporal heat maps suggested a clear seasonal peak during the summer months, when temperature, dryness, and solar radiation interact to reduce fuel moisture. Moreover, the cause-based analysis showed that urban areas experienced more human-related fires (residential, electrical, vehicular), whereas rural zones exhibited more natural or vegetation-driven fires, emphasizing the need for region-specific prevention strategies.
 
 4. Policy and Management Implications
 
-   Short-term monitoring: Continuously track real-time VPD, FM100, and PR to update regional fire alerts and     optimize emergency resource deployment.
-   Long-term mitigation: Focus fuel management and firebreak construction in the identified central–eastern      hotspots.
-   Urban strategy: Strengthen inspections of electrical systems and residential safety.
-   Rural strategy: Emphasize vegetation control and fuel reduction under persistent dryness.
-     Overall, a data-driven, spatially adaptive fire prevention framework is essential for effective mitigation.
+- Short-term monitoring: Continuously track real-time VPD, FM100, and PR to update regional fire alerts and optimize emergency resource deployment.
+
+- Long-term mitigation: Focus fuel management and firebreak construction in the identified central–eastern hotspots.
+
+- Urban strategy: Strengthen inspections of electrical systems and residential safety. Rural strategy: Emphasize vegetation control and fuel reduction under persistent dryness. Overall, a data-driven, spatially adaptive fire prevention framework is essential for effective mitigation.
 
 Across figures, hotter and drier conditions (higher TMMX and VPD) spatially coincide with higher ERC, while higher fuel moisture (FM100 and FM1000) opposes ERC. Precipitation and humidity indicators also oppose ERC but with patchier spatial expression. Wind shows localized peaks and likely modulates spread rather than setting the background hazard. These visual patterns match the correlation matrix and justify focusing the spatial regression on TMMX, VPD, and one fuel-moisture variable (FM100) while avoiding FM100 and FM1000 together due to collinearity.
 
-# 4.2 Reccomendations 
-welldone everyone
-mayb we to fix the echo
+# 4.2 Reccomendations
+
+Implement real time monitoring of dryness and moisture indicators to improve early detection. Prioritize targeted hotspot management in areas with elevated fire potential. Develop region specific prevention plans that reflect local environmental characteristics and historical fire behavior.
 
 # REFFRENCES
