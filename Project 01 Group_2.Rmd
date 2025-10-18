@@ -614,9 +614,7 @@ if (length(anova_summary) > 0 && !is.null(anova_summary)) {
 }
 ```
 
-# 3.3 Objective 3:
-
-Investigate Environmental Factors Influencing Fire Incidences-Jeongwon Yoo
+# 3.3 Objective 3: Investigate Environmental Factors Influencing Fire Incidences
 
 ## 3.3.1 Data Integration
 
@@ -1007,7 +1005,7 @@ Fire Loss in the United States
 National Emergency Response Information System (NERIS)
 National Fire Incident Reporting System (NFIRS)
 National Fire Protection Association (NFPA)
-National Interagency Fire Center (NIFC)
+National Inter-agency Fire Center (NIFC)
 U.S. Fire Administration (USFA)
 USFA Topical Fire Reports
 NFPA Survey Estimates
