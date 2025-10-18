@@ -1002,10 +1002,17 @@ Implement real time monitoring of dryness and moisture indicators to improve ear
 # REFFRENCES
 
 Fire Loss in the United States 2020
+
 National Emergency Response Information System (NERIS) 2019
+
 National Fire Incident Reporting System (NFIRS) 2018
+
 National Fire Protection Association (NFPA) 2019
+
 National Inter-agency Fire Center (NIFC) 2020
+
 U.S. Fire Administration (USFA) 2018
+
 USFA Topical Fire Reports 2018
+
 NFPA Survey Estimates 2019
