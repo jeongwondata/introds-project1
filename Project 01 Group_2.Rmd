@@ -135,7 +135,7 @@ ggplot(data = Study_Area) +
 
 # CHAPTER 3: Analysis and Results
 
-# 3.1 Objective 3: Categorize Types of Fire Incidents and Assess Causes
+# 3.1 Objective 1: Categorize Types of Fire Incidents and Assess Causes
 
 ```{r init, include=F}
 library(ezids)
@@ -272,7 +272,7 @@ qqnorm(fire$FIRE_SIZE, main = "Fire Size") ## Assess whether the distribution of
 qqline(fire$FIRE_SIZE)
 ```
 
-# 3.2 Objective 1
+# 3.2 Objective 2: Spatial distribution of fire incidences
 
 ## 3.2.1 EXPLORATORY DATA ANALYSIS
 
@@ -616,7 +616,7 @@ if (length(anova_summary) > 0 && !is.null(anova_summary)) {
 
 # 3.3 Objective 3:
 
-Investigate Environmental Factors Influencing Fire Incidences-Jeongwon Yoo
+Investigate Environmental Factors Influencing Fire Incidences
 
 ## 3.3.1 Data Integration
 
@@ -993,7 +993,6 @@ The SEM substantially improves fit and removes residual spatial clustering, conf
 Across figures, hotter and drier conditions (higher TMMX and VPD) spatially coincide with higher ERC, while higher fuel moisture (FM100 and FM1000) opposes ERC. Precipitation and humidity indicators also oppose ERC but with patchier spatial expression. Wind shows localized peaks and likely modulates spread rather than setting the background hazard. These visual patterns match the correlation matrix and justify focusing the spatial regression on TMMX, VPD, and one fuel-moisture variable (FM100) while avoiding FM100 and FM1000 together due to collinearity.
 
 # 4.2 Reccomendations 
-welldone everyone
-mayb we to fix the echo
+
 
 # REFFRENCES

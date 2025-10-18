@@ -10,7 +10,7 @@
 
 
 
-<meta name="date" content="2025-10-16" />
+<meta name="date" content="2025-10-17" />
 
 <title>PROJECT 01: Spatial Distribution of Fire Incidents in D.C., Maryland, and Virginia in 2018</title>
 
@@ -1795,7 +1795,7 @@ Incidents in D.C., Maryland, and Virginia in 2018</h1>
 <h4 class="author"><p>Jeongwon Yoo<br />
 Simbanegavi Simbarashe<br />
 Nithin Ravindra Reddy</p></h4>
-<h4 class="date">2025-10-16</h4>
+<h4 class="date">2025-10-17</h4>
 
 </div>
 
@@ -3075,7 +3075,7 @@ a model that handles zero inflation or nonlinearity.</li>
 </div>
 </div>
 <div id="ols-diagnostic-for-bi-model" class="section level1">
-<h1>3.3.5.3.OLS diagnostic for BI model</h1>
+<h1>3.3.5.2.OLS diagnostic for BI model</h1>
 <ul>
 <li>Residuals vs. fitted values display a fan shape and curvature, which
 indicates heteroscedasticity and potential nonlinearity</li>
@@ -3130,8 +3130,10 @@ summary(ols)
 summary(sem)
 moran.test(residuals(ols), lw_k)
 moran.test(residuals(sem), lw_k)</code></pre>
-<div id="description-of-results" class="section level3">
-<h3>Description of Results</h3>
+</div>
+</div>
+<div id="description-of-results" class="section level1">
+<h1>3.3.7 Description of Results</h1>
 <ul>
 <li>summary(ols)</li>
 </ul>
@@ -3188,9 +3190,8 @@ weights: lw_k</p>
 <p>Moran I statistic standard deviate = -0.12209, p-value = 0.5486
 alternative hypothesis: greater sample estimates: Moran I statistic
 Expectation Variance -0.020133928 -0.013888889 0.002616504</p>
-</div>
 <div id="result-description" class="section level3">
-<h3>3.3.6 Result Description</h3>
+<h3>3.3.8 Result Description</h3>
 <p>Model comparison</p>
 <ul>
 <li>SEM preferred: AIC(SEM) = 284.13 vs AIC(OLS) = 318.28 (ΔAIC ≈ 34 →
@@ -3224,9 +3225,11 @@ a simpler story, use VPD as the primary dryness proxy</li>
 clustering, confirming that dryness↑, fuel moisture↓, and precipitation↓
 are the dominant environmental controls on ERC.</p>
 </div>
+<div id="chapter-4-conclusion-and-recoomendations" class="section level2">
+<h2>Chapter 4: Conclusion and Recoomendations</h2>
 </div>
-<div id="object2-conclusion" class="section level2">
-<h2>Object2 Conclusion</h2>
+<div id="conclusion" class="section level2">
+<h2>4.1 Conclusion</h2>
 <p>Across figures, hotter and drier conditions (higher TMMX and VPD)
 spatially coincide with higher ERC, while higher fuel moisture (FM100
 and FM1000) opposes ERC. Precipitation and humidity indicators also
@@ -3238,9 +3241,12 @@ variable (FM100) while avoiding FM100 and FM1000 together due to
 collinearity.</p>
 </div>
 </div>
-<div id="chapter-4-conclusion" class="section level1">
-<h1>Chapter 4: Conclusion</h1>
+<div id="reccomendations" class="section level1">
+<h1>4.2 Reccomendations</h1>
 <p>welldone everyone mayb we to fix the echo</p>
+</div>
+<div id="reffrences" class="section level1">
+<h1>REFFRENCES</h1>
 </div>
 
 
